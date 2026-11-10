@@ -165,6 +165,18 @@ select{font:500 15px var(--body);background:var(--surface);color:var(--ink);bord
 .sc-card.next{border-color:var(--violet);border-top-color:var(--violet);box-shadow:0 8px 20px color-mix(in srgb,var(--violet) 28%,transparent)}
 .sc-card.next .ft{background:var(--violet);color:var(--surface)}
 .stripcap{font:700 13px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
+.feed{list-style:none;margin:0;padding:0}
+.feed li{border-top:1px solid var(--line)}
+.feed li:first-child{border-top:0}
+.feed a.fi{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;color:var(--ink);text-decoration:none}
+.feed a.fi:hover{background:var(--violet-soft)}
+.feed .pill{flex:none;min-width:84px;text-align:center;font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:2px;background:var(--line);color:var(--muted);margin-top:2px}
+.feed .pill.nx{background:var(--violet);color:var(--surface)}
+.feed .pill.hl{background:var(--violet-soft);color:var(--violet)}
+.feed .tx{flex:1;min-width:0;font-size:14px;line-height:1.35}
+.feed small{display:block;color:var(--muted);margin-top:2px}
+.more{display:block;width:100%;font:600 14px var(--body);color:var(--violet);background:none;border:0;border-top:1px solid var(--line);padding:11px;cursor:pointer}
+.more:hover{background:var(--violet-soft)}
 .sortb{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit}
 .sortb:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
 th[aria-sort] .sortb{color:var(--violet)}
@@ -236,6 +248,9 @@ en:{
  fmtPool:'Pool games are played to a finish only in regulation: no overtime, a tie stands. A 7-goal lead after two periods switches the game to running time.',
  sheet:'Scoresheet',openSheet:'Open the PDF ↗',
  stripTitle:'Game timeline',
+ news:'News',newsSub:'Results, next games and highlights',followTeam:'Follow a team',vs:'vs',resLabel:'Result',hlLabel:'Highlight',shootout:'shootout',overtime:'overtime',
+ shutout:(w,l)=>`Shutout: ${w} blanks ${l}`,big:(w,l,m)=>`${w} beats ${l} by ${m} goals`,hat:name=>`Hat trick for ${name}`,many:(h,a,n)=>`${n} goals in ${h} vs ${a}`,
+ moreNews:'Show more',lessNews:'Show less',noNews:'Nothing yet: results, next games and highlights show up here as the tournament goes.',
  playerStats:'Player stats',skaters:'Skaters',goalies:'Goalies',allTeamsP:'All teams',
  pCols:{no:'#',pl:'Player',tm:'Team',gp:'GP',g:'G',a:'A',pts:'PTS',pim:'PIM'},
  gCols:{no:'#',pl:'Goalie',tm:'Team',gp:'GP',ga:'GA',gaa:'GAA',so:'SO'},
@@ -285,6 +300,9 @@ fr:{
  fmtPool:'Les matchs de la ronde préliminaire ne sont pas à finir : pas de prolongation, une nulle est conservée. Un écart de 7 buts après deux périodes fait passer le match à temps continu.',
  sheet:'Feuille de pointage',openSheet:'Ouvrir le PDF ↗',
  stripTitle:'Fil des matchs',
+ news:'Nouvelles',newsSub:'Résultats, prochains matchs et faits saillants',followTeam:'Suivre une équipe',vs:'contre',resLabel:'Résultat',hlLabel:'Fait saillant',shootout:'fusillade',overtime:'prolongation',
+ shutout:(w,l)=>`Blanchissage : ${w} blanchit ${l}`,big:(w,l,m)=>`${w} l'emporte par ${m} buts contre ${l}`,hat:name=>`Tour du chapeau pour ${name}`,many:(h,a,n)=>`${n} buts dans ${h} contre ${a}`,
+ moreNews:'Voir plus',lessNews:'Voir moins',noNews:'Rien pour l\'instant : les résultats, prochains matchs et faits saillants s\'afficheront ici au fil du tournoi.',
  playerStats:'Statistiques des joueuses',skaters:'Patineuses',goalies:'Gardiennes',allTeamsP:'Toutes les équipes',
  pCols:{no:'#',pl:'Joueuse',tm:'Équipe',gp:'PJ',g:'B',a:'P',pts:'PTS',pim:'MP'},
  gCols:{no:'#',pl:'Gardienne',tm:'Équipe',gp:'PJ',ga:'BC',gaa:'MBC',so:'BL'},
@@ -388,8 +406,54 @@ function stripHTML(){
     return `<a class="sc-card${isN?' next':''}${sc?' done':''}${isKO(g)?' ko':''}" href="${link(g)}"><div class="hd"><div class="dy">${d.dow}<b>${d.md}</b></div><div class="hr">${tm(g.start)}</div></div>${side(h,sc?g.score.home:0,sc?g.score.away:0)}${side(a,sc?g.score.away:0,sc?g.score.home:0)}${(stage||tag)?`<div class="ft"><span>${stage}</span><span>${tag}</span></div>`:''}</a>`};
   return `<div class="stripcap">${t().stripTitle}</div><div class="strip" id="strip">${[...G].sort((a,b)=>a.start.localeCompare(b.start)||a.n-b.n).map(card).join('')}</div>`;
 }
+/* ---------- news feed: results, next games and highlights, worked out from the data only (no player names) ---------- */
+const FOLLOW_KEY='laval-team';
+let FOLLOW='';try{FOLLOW=localStorage.getItem(FOLLOW_KEY)||''}catch(e){}
+if(FOLLOW&&!T[FOLLOW])FOLLOW='';
+let NEWS_MORE=false;
+function newsItems(){
+  const items=[],at=g=>new Date(g.end||g.start).getTime(),teamsOf=g=>[g.home,g.away].filter(Boolean);
+  const when=g=>{const d=dd(g.start);return `${d.dow} ${d.md}, ${tm(g.start)}`};
+  G.filter(g=>g.status==='scheduled'&&new Date(g.start)>=now).sort((a,b)=>a.start.localeCompare(b.start)||a.n-b.n).forEach(g=>{
+    const ar=AR[g.arena],stage=isKO(g)?(isFinal(g)?t().final:t().semi)+' · ':'';
+    items.push({kind:'next',ts:new Date(g.start).getTime(),teams:teamsOf(g),g,
+      html:`${stage}<b>${esc(slotName(g,'home').name)}</b> ${t().vs} <b>${esc(slotName(g,'away').name)}</b><small>${when(g)}${ar?` · ${esc(ar.name)}${ar.rink?` (${esc(ar.rink)})`:''}`:''}</small>`});
+  });
+  G.filter(played).forEach(g=>{
+    const h=g.score.home,a=g.score.away,hn=tn(g.home),an=tn(g.away),ts=at(g);
+    const ext=g.goals.some(x=>/^SO/i.test(x.p))?t().shootout:g.goals.some(x=>/^OT/i.test(x.p))?t().overtime:'';
+    const bold=(n,v,o)=>v>o?`<b>${esc(n)} ${v}</b>`:`${esc(n)} ${v}`;
+    items.push({kind:'res',ts,teams:teamsOf(g),g,
+      html:`${bold(hn,h,a)}, ${bold(an,a,h)}${ext?` (${ext})`:''}<small>${when(g)}</small>`});
+    const hl=(html)=>items.push({kind:'hl',ts:ts-1,teams:teamsOf(g),g,html});
+    if((h===0)!==(a===0)){const w=h>a?hn:an,l=h>a?an:hn;hl(t().shutout(esc(w),esc(l)))}
+    else if(Math.abs(h-a)>=4)hl(t().big(esc(h>a?hn:an),esc(h>a?an:hn),Math.abs(h-a)));
+    const perScorer={};g.goals.forEach(x=>{if(x.s)(perScorer[x.s]??={t:x.t,n:0}).n++});
+    Object.values(perScorer).filter(x=>x.n>=3).forEach(x=>hl(t().hat(esc(tn(x.t)))));
+    if(h+a>=9)hl(t().many(esc(hn),esc(an),h+a));
+  });
+  const mine=FOLLOW?items.filter(i=>i.teams.includes(FOLLOW)):items;
+  const next=mine.filter(i=>i.kind==='next').sort((a,b)=>a.ts-b.ts).slice(0,FOLLOW?2:3);
+  const rest=mine.filter(i=>i.kind!=='next').sort((a,b)=>b.ts-a.ts);
+  return[...next,...rest];
+}
+function newsHTML(){
+  const opts=Object.entries(T).sort((a,b)=>a[1].localeCompare(b[1])).map(([id,n])=>`<option value="${id}"${id===FOLLOW?' selected':''}>${esc(n)}</option>`).join('');
+  return `<h2>${t().news} <small>${t().newsSub}</small></h2><div class="filters"><select id="nteam" aria-label="${t().followTeam}"><option value="">${t().allTeams}</option>${opts}</select></div><div class="card" id="nl"></div>`;
+}
+function fillNews(){
+  const sel=$('nteam'),box=$('nl');if(!sel||!box)return;
+  const draw=()=>{
+    const all=newsItems(),shown=NEWS_MORE?all.slice(0,30):all.slice(0,6);
+    const pill={next:`<span class="pill nx">${t().nextGame}</span>`,res:`<span class="pill">${t().resLabel}</span>`,hl:`<span class="pill hl">${t().hlLabel}</span>`};
+    box.innerHTML=shown.length?`<ul class="feed">${shown.map(i=>`<li><a class="fi" href="${link(i.g)}">${pill[i.kind]}<div class="tx">${i.html}</div></a></li>`).join('')}</ul>${all.length>6?`<button type="button" class="more" id="nmore">${NEWS_MORE?t().lessNews:t().moreNews}</button>`:''}`:`<div class="empty">${t().noNews}</div>`;
+    const b=$('nmore');if(b)b.onclick=()=>{NEWS_MORE=!NEWS_MORE;draw()};
+  };
+  sel.onchange=()=>{FOLLOW=sel.value;NEWS_MORE=false;try{localStorage.setItem(FOLLOW_KEY,FOLLOW)}catch(e){}draw()};
+  draw();
+}
 function overview(){
-  return stripHTML()+`<h2>${t().bracket} <small>${t().bracketSub}</small></h2>${bracketHTML()}
+  return stripHTML()+newsHTML()+`<h2>${t().bracket} <small>${t().bracketSub}</small></h2>${bracketHTML()}
   <h2>${t().standings} <small>${esc(D.pool)}</small></h2>${standHTML()}
   <h2>${t().allGames} <small>${t().allGamesSub}</small></h2>${dayBlocks(G)}`;
 }
@@ -533,6 +597,7 @@ function route(keepScroll){
   $('tabs').innerHTML=tabs+`<button type="button" class="lang" id="lang" aria-label="${t().selLabel}" lang="${LANG==='fr'?'en':'fr'}">${t().sel}</button>`;
   $('lang').onclick=()=>{LANG=LANG==='fr'?'en':'fr';try{localStorage.setItem('laval-lang',LANG)}catch(e){}route(true)};
   const sp=$('strip');if(sp&&sp.querySelector){const n=sp.querySelector('.next');if(n)sp.scrollLeft=n.offsetLeft-sp.offsetLeft-(sp.clientWidth-n.offsetWidth)/2}
+  if(v==='overview'&&!m)fillNews();
   if(h==='schedule')fillSched();
   if(h==='stats')fillPlayers();
   if(keepScroll!==true)window.scrollTo(0,0);
