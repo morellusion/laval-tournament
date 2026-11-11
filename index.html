@@ -184,6 +184,8 @@ th[aria-sort] .sortb{color:var(--violet)}
 .ptbl td.no{color:var(--violet);font:800 italic 16px var(--display);width:46px}
 .ptbl td.tm{color:var(--muted);white-space:normal;min-width:150px;font-size:14px}
 .pnote{color:var(--muted);font-size:13px;margin-top:8px}
+.share{align-self:center;flex:none;font:700 14px var(--display);letter-spacing:.08em;border:1px solid var(--violet);background:var(--violet);color:#fff;padding:5px 14px;border-radius:99px;cursor:pointer;margin-left:8px;white-space:nowrap}
+.share:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
 .lang{margin-left:auto;align-self:center;flex:none;font:700 14px var(--display);letter-spacing:.1em;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:5px 12px;border-radius:99px;cursor:pointer}
 .lang:hover{border-color:var(--violet);color:var(--violet)}
 .pill{display:inline-block;margin-right:6px}
@@ -265,6 +267,7 @@ en:{
   ['Teams on game day',['At the arena 45 min before game time','Ready on ice 15 min before','Head coach approves the lineup in Spordle Play 30 min before','Leave the dressing room 15 min after the game','Players 14+ may be asked for photo ID']]],
  notFound:'Page not found',backOv:'Back to the overview',
  foot:(n,g,t)=>`Source: Spordle schedule data for ${n}. ${g} games, ${t} teams. Standings are computed from game results and may differ from official standings.`,
+ share:'Share',shareLabel:'Share this page',shareText:'Laval Provincial Women\'s Hockey Tournament – schedule, scores and standings',copied:'Link copied!',
  sel:'FR',selLabel:'Voir en français'
 },
 fr:{
@@ -317,6 +320,7 @@ fr:{
   ['Équipes le jour du match',['Présentes à l’aréna 45 min avant le match','Prêtes à jouer 15 min avant','L’entraîneur-chef approuve l’alignement dans Spordle Play 30 min avant','Libérer le vestiaire 15 min après le match','Les joueuses de 14 ans et plus peuvent devoir présenter une pièce d’identité avec photo']]],
  notFound:'Page introuvable',backOv:'Retour à l’aperçu',
  foot:(n,g,t)=>`Source : données d’horaire Spordle pour ${n}. ${g} matchs, ${t} équipes. Le classement est calculé à partir des résultats et peut différer du classement officiel.`,
+ share:'Partager',shareLabel:'Partager cette page',shareText:'Tournoi provincial de hockey féminin de Laval – horaire, résultats et classement',copied:'Lien copié !',
  sel:'EN',selLabel:'View in English'
 }};
 const t=()=>S[LANG];
@@ -594,7 +598,15 @@ function route(keepScroll){
   else html=overview();
   $('view').innerHTML=html;
   const tabs=Object.entries(t().tabs).map(([k,l])=>`<a href="#${k}" ${k===v?'aria-current="page"':''}>${l}</a>`).join('');
-  $('tabs').innerHTML=tabs+`<button type="button" class="lang" id="lang" aria-label="${t().selLabel}" lang="${LANG==='fr'?'en':'fr'}">${t().sel}</button>`;
+  $('tabs').innerHTML=tabs+`<button type="button" class="lang" id="lang" aria-label="${t().selLabel}" lang="${LANG==='fr'?'en':'fr'}">${t().sel}</button><button type="button" class="share" id="share" aria-label="${t().shareLabel}">${t().share}</button>`;
+  $('share').onclick=async()=>{
+    const url=location.href.split('#')[0],b=$('share'),old=b.textContent;
+    try{if(navigator.share){await navigator.share({title:document.title,text:t().shareText,url});return}}catch(e){if(e&&e.name==='AbortError')return}
+    let ok=false;
+    try{await navigator.clipboard.writeText(url);ok=true}catch(e){
+      try{const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch(e2){}}
+    if(ok){b.textContent=t().copied;setTimeout(()=>{b.textContent=old},2000)}else{window.prompt&&window.prompt(t().shareLabel,url)}
+  };
   $('lang').onclick=()=>{LANG=LANG==='fr'?'en':'fr';try{localStorage.setItem('laval-lang',LANG)}catch(e){}route(true)};
   const sp=$('strip');if(sp&&sp.querySelector){const n=sp.querySelector('.next');if(n)sp.scrollLeft=n.offsetLeft-sp.offsetLeft-(sp.clientWidth-n.offsetWidth)/2}
   if(v==='overview'&&!m)fillNews();
