@@ -265,7 +265,7 @@ const DOWS={en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],fr:['dim.','lun.','ma
 const INF={'Too many players on the ice':'Trop de joueuses sur la glace','Head contact':'Contact à la tête','Verbal abuse of an official, unsportsmanlike conduct, misconduct':'Abus verbal envers un officiel, conduite antisportive, inconduite','Holding the stick':'Retenue du bâton','Clipping':'Mise en échec sous les genoux','Delaying the game':'Retard de match','Spearing':'Harponnage','Game Ejection':'Expulsion du match','Playing with more than one stick, a broken, illegal or illegally obtained stick':'Jeu avec plus d’un bâton, ou avec un bâton brisé, illégal ou obtenu illégalement','Interference with the goaltender':'Obstruction envers la gardienne','Interference from the bench':'Obstruction depuis le banc','Diving and Embellishment':'Simulation','Closing the hand on or freezing the puck':'Main fermée sur la rondelle ou rondelle gelée',"Leaving the player's bench or penalty box":'Sortie du banc des joueuses ou du banc des punitions','Hooking':'Accrochage','Tripping':'Croc-en-jambe','Body checking':'Mise en échec','Slashing':'Coup de bâton','Roughing':'Rudesse','Interference':'Obstruction','Holding':'Retenue','High sticking':'Bâton élevé','Cross checking':'Double échec','Cross-checking':'Double échec','Boarding':'Mise en échec contre la bande','Elbowing':'Coup de coude','Too many players':'Trop de joueuses','Delay of game':'Retard de match','Checking from behind':'Mise en échec par derrière','Unsportsmanlike conduct':'Conduite antisportive','Charging':'Charge','Kneeing':'Coup de genou','Misconduct':'Inconduite','Fighting':'Bagarre'};
 const S={
 en:{
- eyebrow:'30th edition · U15 Girls',
+ eyebrow:'30th edition',
  tabs:{overview:'Overview',schedule:'Schedule',standings:'Standings',stats:'Stats',rules:'Rules'},
  games:n=>`${n} game${n===1?'':'s'}`,teams:n=>`${n} teams`,
  to:' to ',
@@ -342,7 +342,7 @@ en:{
  sel:'FR',selLabel:'Voir en français'
 },
 fr:{
- eyebrow:'30e édition · U15 féminin',
+ eyebrow:'30e édition',
  tabs:{overview:'Aperçu',schedule:'Horaire',standings:'Classement',stats:'Statistiques',rules:'Règlements'},
  games:n=>`${n} match${n===1?'':'s'}`,teams:n=>`${n} équipes`,
  to:' au ',
@@ -782,7 +782,7 @@ function notFound(){return `<div class="card empty"><b>${t().notFound}</b><a hre
 /* ---------- render ---------- */
 function chrome(){
   document.documentElement.lang=LANG;
-  $('eb').textContent=t().eyebrow+' '+D.label.slice(-1)+' ('+D.label.replace(' ','')+')';
+  $('eb').textContent=t().eyebrow;
   $('cats').innerHTML=ALL.cats.map(c=>`<a href="?c=${c.key}"${c.key===D.key?' aria-current="page"':''}>${c.label}</a>`).join('');
   const a0=dd(D.start),a1=dd(D.end);
   $('sub').innerHTML=`<span>${a0.md}${t().to}${a1.md}, 2026</span><a href="${mapUrl(Object.values(AR)[0])}" target="_blank" rel="noopener" style="color:inherit">Aréna Martin St-Louis, Laval ↗</a><span>${t().games(G.length)} · ${t().teams(Object.keys(T).length)}</span>`;
