@@ -78,6 +78,7 @@ h3{font:700 16px var(--display);text-transform:uppercase;letter-spacing:.1em;col
 .gr .tm .win{color:var(--violet)}
 .chip{font:700 11px var(--display);letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;background:var(--violet-soft);color:var(--muted);border-radius:2px;white-space:nowrap}
 .chip.played{background:var(--violet);color:var(--surface)}
+.chip.live{background:#d33;color:#fff}
 .chip.ko{background:var(--hero);color:#fff}
 @media(max-width:480px){.gr{grid-template-columns:58px 1fr}.gr .chip{display:none}}
 /* bracket */
@@ -259,6 +260,8 @@ const D=ALL.cats.find(c=>c.key===CATKEY)||ALL.cats[0];
 try{localStorage.setItem('laval-cat',D.key)}catch(e){}
 D.logoImgs=ALL.logoImgs;
 const T=D.teams,P=D.players,AR=D.arenas,G=D.games;
+/* Spordle marks a game 'played' (0-0) as soon as it starts: until its scheduled end, treat it as in progress */
+{const n0=Date.now();G.forEach(g=>{if(g.status==='played'&&n0>=new Date(g.start)&&n0<new Date(g.end))g.status='live'})}
 const $=i=>document.getElementById(i);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* ---------- language ---------- */
@@ -290,7 +293,7 @@ en:{
  noGameYet:(d,t)=>`No game has been played yet. Scoring and penalty leaders appear here once results come in. The first game is ${d} at ${t}.`,
  leaders:'Leaders',lGoals:'Goals',lPoints:'Points (G+A)',lPim:'Penalty minutes',noEntries:'No entries yet.',pen:'pen',min:'min',teamStats:'Team stats',
  back:'← Standings',backSched:'← Schedule',rank:r=>`Pool rank ${r}`,pts:'pts',roster:'Roster',noRoster:'Roster not published',noRosterTip:'Lineups are posted by Spordle after each game is played.',
- status:{scheduled:'scheduled',played:'played',postponed:'postponed',cancelled:'cancelled'},
+ status:{scheduled:'scheduled',live:'in progress',played:'played',postponed:'postponed',cancelled:'cancelled'},
  homeL:'Home · dark jerseys',awayL:'Visitor · light jerseys',
  fStatus:'Status',fPuck:'Puck drop',fArena:'Arena',fTimeline:'Team timeline',tbd:'TBD',timeTo:' to ',
  tl:(a,b,c)=>`Lineup approved by ${a}<br>At arena by ${b}<br>Ready on ice by ${c}`,
@@ -367,7 +370,7 @@ fr:{
  noGameYet:(d,t)=>`Aucun match n’a encore été joué. Les meneuses au pointage et aux punitions s’afficheront ici dès les premiers résultats. Le premier match a lieu le ${d} à ${t}.`,
  leaders:'Meneuses',lGoals:'Buts',lPoints:'Points (B+A)',lPim:'Minutes de punition',noEntries:'Aucune donnée pour le moment.',pen:'pun.',min:'min',teamStats:'Statistiques par équipe',
  back:'← Classement',backSched:'← Horaire',rank:r=>`Rang : ${r}`,pts:'pts',roster:'Alignement',noRoster:'Alignement non publié',noRosterTip:'Les alignements sont publiés par Spordle après chaque match.',
- status:{scheduled:'prévu',played:'joué',postponed:'reporté',cancelled:'annulé'},
+ status:{scheduled:'prévu',live:'en cours',played:'joué',postponed:'reporté',cancelled:'annulé'},
  homeL:'Domicile · chandails foncés',awayL:'Visiteur · chandails pâles',
  fStatus:'Statut',fPuck:'Mise au jeu',fArena:'Aréna',fTimeline:'Horaire de l’équipe',tbd:'À déterminer',timeTo:' à ',
  tl:(a,b,c)=>`Alignement approuvé avant ${a}<br>Présence à l’aréna dès ${b}<br>Prête sur la glace à ${c}`,
@@ -524,12 +527,12 @@ function standHTML(rows,q,legend,di=0){
   return `<div class="card scroll"><table><tr><th>#</th><th>${t().team}</th>${t().cols.map(h=>`<th class="n">${h}</th>`).join('')}</tr>${rows.map((r,i)=>`<tr class="${i<q?'q':''}" data-pos="${di}:${i+1}"><td class="rk">${i+1}</td><td class="team"><a href="#team-${r.id}" style="color:inherit;text-decoration:none" class="tl">${lg(r.id,28)}<span>${esc(tn(r.id))}</span></a></td>${[r.gp,r.w,r.l,r.t,r.gf,r.ga,r.pim,r.pts].map(v=>`<td class="n">${v}</td>`).join('')}</tr>`).join('')}</table></div>${legend?`<div class="legend">${legend}</div>`:''}`;
 }
 function stripHTML(){
-  const nx=nextG||[...G].reverse().find(played)||G[0];
+  const nx=G.find(g=>g.status==='live')||nextG||[...G].reverse().find(played)||G[0];
   const card=g=>{
     const d=dd(g.start),h=slotName(g,'home'),a=slotName(g,'away'),sc=played(g),isN=g===nx;
     const side=(s,v,o)=>`<div class="tt${s.ph?' ph':''}${sc?(v>o?' win':' lose'):''}">${lg(s.id,28)}<span class="nm" title="${esc(s.name)}">${esc(s.name)}</span>${sc?`<span class="sq">${v}</span>`:'<span></span>'}</div>`;
     const stage=isKO(g)?stageLab(g):'';
-    const tag=isN&&!sc?t().nextGame:(sc?t().status.played:'');
+    const tag=g.status==='live'?t().status.live:isN&&!sc?t().nextGame:(sc?t().status.played:'');
     return `<a class="sc-card${isN?' next':''}${sc?' done':''}${isKO(g)?' ko':''}" href="${link(g)}"><div class="hd"><div class="dy">${d.dow}<b>${d.md}</b></div><div class="hr">${tm(g.start)}</div></div>${side(h,sc?g.score.home:0,sc?g.score.away:0)}${side(a,sc?g.score.away:0,sc?g.score.home:0)}${(stage||tag)?`<div class="ft"><span>${stage}</span><span>${tag}</span></div>`:''}</a>`};
   return `<div class="stripcap">${t().stripTitle}</div><div class="strip" id="strip">${[...G].sort((a,b)=>a.start.localeCompare(b.start)||a.n-b.n).map(card).join('')}</div>`;
 }
@@ -541,7 +544,7 @@ function overview(){
 }
 function schedule(){
   const opts=Object.entries(T).sort((a,b)=>a[1].localeCompare(b[1])).map(([id,n])=>`<option value="${id}">${esc(n)}</option>`).join('');
-  return `<h2>${t().schedule} <small>${t().games(G.length)} · Aréna Martin St-Louis</small></h2><div class="filters"><select id="fteam" aria-label="${t().filterTeam}"><option value="">${t().allTeams}</option>${opts}</select><select id="fst" aria-label="${t().filterStatus}"><option value="">${t().allStatus}</option><option value="played">${t().played}</option><option value="scheduled">${t().upcoming}</option></select></div><div id="sl"></div>`;
+  return `<h2>${t().schedule} <small>${t().games(G.length)} · Aréna Martin St-Louis</small></h2><div class="filters"><select id="fteam" aria-label="${t().filterTeam}"><option value="">${t().allTeams}</option>${opts}</select><select id="fst" aria-label="${t().filterStatus}"><option value="">${t().allStatus}</option><option value="played">${t().played}</option><option value="live">${t().status.live}</option><option value="scheduled">${t().upcoming}</option></select></div><div id="sl"></div>`;
 }
 function fillSched(){
   const draw=()=>{const tm_=$('fteam').value,s=$('fst').value;
