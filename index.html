@@ -311,7 +311,7 @@ en:{
  lineupNo:'Lineup not posted yet. Coaches approve it online in Spordle Play 30 minutes before the game.',
  fmtKO:'Playoff games (quarterfinals, semifinals and final) can go to overtime: one 10 minute stopped-time period, 3 skaters and a goalie each, first goal wins, then a shootout if still tied. Each team gets one extra 30 second timeout in overtime.',
  fmtPool:'Pool games are played to a finish only in regulation: no overtime, a tie stands. A 7-goal lead after two periods switches the game to running time.',
- sheet:'Scoresheet',openSheet:'Open the PDF ↗',openSp:'View the game on LQHF ↗',
+ sheet:'Scoresheet',openSheet:'Scoresheet (PDF) ↗',openSp:'View the game on LQHF ↗',
  stripTitle:'Game timeline',
  pred:'Predictions',predSub:'Initial forecast, then recalculated after every result',
  predInit:'Initial prediction',predFrozen:d=>`frozen on ${d}, from league results only`,
@@ -388,7 +388,7 @@ fr:{
  lineupNo:'Alignement pas encore publié. Les entraîneurs l’approuvent en ligne dans Spordle Play 30 minutes avant le match.',
  fmtKO:'Les matchs éliminatoires (quarts de finale, demi-finales et finale) peuvent aller en prolongation : une période de 10 minutes à temps arrêté, 3 joueuses et une gardienne par équipe, le premier but met fin au match, puis tirs de barrage si l’égalité persiste. Chaque équipe a un temps d’arrêt supplémentaire de 30 secondes en prolongation.',
  fmtPool:'Les matchs de la ronde préliminaire ne sont pas à finir : pas de prolongation, une nulle est conservée. Un écart de 7 buts après deux périodes fait passer le match à temps continu.',
- sheet:'Feuille de pointage',openSheet:'Ouvrir le PDF ↗',openSp:'Voir le match sur LQHF ↗',
+ sheet:'Feuille de pointage',openSheet:'Feuille de pointage (PDF) ↗',openSp:'Voir le match sur LQHF ↗',
  stripTitle:'Fil des matchs',
  pred:'Prédictions',predSub:'Prévision initiale, puis recalculée après chaque résultat',
  predInit:'Prédiction initiale',predFrozen:d=>`figée le ${d}, à partir des résultats de ligue seulement`,
@@ -745,8 +745,7 @@ function gameView(n){
     <div class="fact"><b>${t().fStatus}</b>${esc(lv?liveLab(g):stLab(g.status))}</div>
     <div class="fact"><b>${t().fPuck}</b>${tm(g.start)}${t().timeTo}${tm(g.end)}</div>
     <div class="fact"><b>${t().fArena}</b>${ar?`${esc(ar.name)}, ${esc(ar.rink)}<br><a href="${map}" target="_blank" rel="noopener">${esc(ar.address)}, ${esc(ar.city)} ↗</a>`:t().tbd}</div>
-    ${spUrl(g)?`<div class="fact"><b>Spordle</b><a href="${spUrl(g)}" target="_blank" rel="noopener">${t().openSp}</a></div>`:''}
-    ${g.sheet?`<div class="fact"><b>${t().sheet}</b><a href="${esc(g.sheet)}" target="_blank" rel="noopener">${t().openSheet}</a></div>`:''}
+    ${spUrl(g)||g.sheet?`<div class="fact"><b>Spordle</b>${spUrl(g)?`<a href="${spUrl(g)}" target="_blank" rel="noopener">${t().openSp}</a>`:''}${spUrl(g)&&g.sheet?'<br>':''}${g.sheet?`<a href="${esc(g.sheet)}" target="_blank" rel="noopener">${t().openSheet}</a>`:''}</div>`:''}
     <div class="fact"><b>${t().fTimeline}</b>${t().tl(tmShift(g.start,-30),tmShift(g.start,-45),tmShift(g.start,-15))}</div>
   </div>
   ${periods?`<h2>${t().byPeriod}</h2>${periods}`:''}
