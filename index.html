@@ -122,6 +122,8 @@ td.team{white-space:normal;min-width:190px;font-weight:600}
 td.rk{font:800 italic 20px var(--display);color:var(--violet);width:44px}
 tr.q td{background:color-mix(in srgb,var(--violet-soft) 60%,transparent)}
 tr.q td.rk::after{content:" ▸";font-size:12px}
+tr.hl td{background:color-mix(in srgb,var(--violet) 22%,var(--surface));font-weight:700}
+tr.hl td:first-child{box-shadow:inset 4px 0 0 var(--violet)}
 .legend{color:var(--muted);font-size:13px;margin-top:8px}
 /* game detail */
 .back{display:inline-block;margin-bottom:14px;font-weight:600}
@@ -490,8 +492,16 @@ function barHTML(g,side){
   const st=v==null?'':(v>o?' win':' lose');
   return `<div class="bar${s.ph?' ph':''}${st}">${badge}${who}${v==null?'':`<div class="pts">${v}</div>`}</div>`;
 }
+function slotKeys(g,side){
+  const ph=g[side==='home'?'hp':'ap']||'';
+  const sd=ph.match(/(\d)\D*\s+position/i),dv=ph.match(/(\d)\D*?\s+Division\s+(\S+)/i),w=ph.match(/#(\d+)/);
+  if(sd)return['0:'+sd[1]];
+  if(dv){const di=DIVS.findIndex(x=>x&&x.toUpperCase().endsWith(dv[2].toUpperCase()));return[Math.max(0,di)+':'+dv[1]]}
+  if(w){const m=byN[+w[1]];return m?[...slotKeys(m,'home'),...slotKeys(m,'away')]:[]}
+  return[];
+}
 function bracketHTML(){
-  const c=(g,cls,lab)=>`<a class="mu ${cls}" href="${link(g)}"><div class="mh"><span>${lab} · ${t().gameWord} ${g.n}</span><span>${dd(g.start).dow} ${tm(g.start)}</span></div><div class="rows">${barHTML(g,'home')}${barHTML(g,'away')}</div></a>`;
+  const c=(g,cls,lab)=>`<a class="mu ${cls}" data-pos="${[...slotKeys(g,'home'),...slotKeys(g,'away')].join(' ')}" href="${link(g)}"><div class="mh"><span>${lab} · ${t().gameWord} ${g.n}</span><span>${dd(g.start).dow} ${tm(g.start)}</span></div><div class="rows">${barHTML(g,'home')}${barHTML(g,'away')}</div></a>`;
   const adv=`<div class="advance"><span class="ar">&#9654;</span><small>${t().winners}</small></div>`;
   const colQ=qfs.length?`<div class="col">${qfs.map(g=>c(g,'qf',t().quarter)).join('')}</div>${adv}`:'';
   return `<div class="bracket${qfs.length?' r3':''}">${colQ}<div class="col">${semis.map(g=>c(g,'semi',t().semi)).join('')}</div><div class="advance"><span class="ar">&#9654;</span><small>${t().winners}</small></div><div class="col">${fin?c(fin,'fin',t().final):''}</div></div>`;
@@ -508,10 +518,10 @@ function dayBlocks(list){
 }
 function standAll(){
   if(DIVS.length===1)return standHTML(ST,4,t().legend);
-  return STD.map((rows,i)=>`<h3 class="divh">${t().divWord} ${esc(divLab(DIVS[i]))}</h3>${standHTML(rows,0,i===STD.length-1?t().legendA:'')}`).join('');
+  return STD.map((rows,i)=>`<h3 class="divh">${t().divWord} ${esc(divLab(DIVS[i]))}</h3>${standHTML(rows,0,i===STD.length-1?t().legendA:'',i)}`).join('');
 }
-function standHTML(rows,q,legend){
-  return `<div class="card scroll"><table><tr><th>#</th><th>${t().team}</th>${t().cols.map(h=>`<th class="n">${h}</th>`).join('')}</tr>${rows.map((r,i)=>`<tr class="${i<q?'q':''}"><td class="rk">${i+1}</td><td class="team"><a href="#team-${r.id}" style="color:inherit;text-decoration:none" class="tl">${lg(r.id,28)}<span>${esc(tn(r.id))}</span></a></td>${[r.gp,r.w,r.l,r.t,r.gf,r.ga,r.pim,r.pts].map(v=>`<td class="n">${v}</td>`).join('')}</tr>`).join('')}</table></div>${legend?`<div class="legend">${legend}</div>`:''}`;
+function standHTML(rows,q,legend,di=0){
+  return `<div class="card scroll"><table><tr><th>#</th><th>${t().team}</th>${t().cols.map(h=>`<th class="n">${h}</th>`).join('')}</tr>${rows.map((r,i)=>`<tr class="${i<q?'q':''}" data-pos="${di}:${i+1}"><td class="rk">${i+1}</td><td class="team"><a href="#team-${r.id}" style="color:inherit;text-decoration:none" class="tl">${lg(r.id,28)}<span>${esc(tn(r.id))}</span></a></td>${[r.gp,r.w,r.l,r.t,r.gf,r.ga,r.pim,r.pts].map(v=>`<td class="n">${v}</td>`).join('')}</tr>`).join('')}</table></div>${legend?`<div class="legend">${legend}</div>`:''}`;
 }
 function stripHTML(){
   const nx=nextG||[...G].reverse().find(played)||G[0];
@@ -766,6 +776,14 @@ function route(keepScroll){
   if(h==='stats')fillPlayers();
   if(keepScroll!==true)window.scrollTo(0,0);
 }
+(()=>{const root=$('view');if(!root||!root.addEventListener)return;
+  const on=e=>{const m=e.target.closest&&e.target.closest('.mu[data-pos]');if(!m)return;const ks=m.dataset.pos.split(' ');
+    document.querySelectorAll('tr[data-pos]').forEach(r=>r.classList.toggle('hl',ks.includes(r.dataset.pos)))};
+  const off=()=>document.querySelectorAll('tr.hl').forEach(r=>r.classList.remove('hl'));
+  root.addEventListener('mouseover',on);root.addEventListener('focusin',on);
+  root.addEventListener('mouseout',e=>{const n=e.relatedTarget;if(!n||!n.closest||!n.closest('.mu'))off()});
+  root.addEventListener('focusout',off);
+})();
 addEventListener('hashchange',()=>route());route();
 </script>
 </body></html>
