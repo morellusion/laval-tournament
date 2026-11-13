@@ -634,13 +634,8 @@ function statsView(){
   const L=Object.values(sk);
   const tab=(title,rows,cols)=>`<div class="card scroll"><div style="padding:10px 14px 0"><h3>${title}</h3></div>${rows.length?`<table>${rows.map((r,i)=>`<tr><td class="rk">${i+1}</td><td class="team">${esc(P[r.id])}<small style="display:block;color:var(--muted);font-weight:400">${esc(tn(r.t))}</small></td>${cols(r).map(v=>`<td class="n">${v}</td>`).join('')}</tr>`).join('')}</table>`:`<div class="empty">${t().noEntries}</div>`}</div>`;
   const top=f=>L.filter(r=>f(r)>0).sort((a,b)=>f(b)-f(a)||(b.g-a.g)).slice(0,8);
-  const goalsTot=G.reduce((s,g)=>s+g.goals.length,0),pimTot=G.reduce((s,g)=>s+g.pens.reduce((x,p)=>x+p.min,0),0);
-  const pl=G.filter(played),sum=pl.reduce((s,g)=>s+g.score.home+g.score.away,0);
-  const kpis=[[t().kGames,`${nPlayed} / ${G.length}`],[t().kGoals,goalsTot||sum],[t().kGpg,pl.length?(sum/pl.length).toFixed(1):'–'],[t().kPim,pimTot]];
-  const k=`<div class="card facts">${kpis.map(([a,b])=>`<div class="fact"><b>${a}</b><span class="disp" style="font-size:28px">${b}</span></div>`).join('')}</div>`;
-  const empty=!anyPlayed?`<div class="note" style="margin-bottom:16px">${t().noGameYet(dd(first).dow+' '+dd(first).md,tm(first))}</div>`:'';
   const tstats=ST.map(r=>`<tr><td class="team"><a href="#team-${r.id}" style="color:inherit;text-decoration:none" class="tl">${lg(r.id,24)}<span>${esc(tn(r.id))}</span></a></td>${[r.gp,r.gf,r.ga,r.gf-r.ga>0?'+'+(r.gf-r.ga):r.gf-r.ga,r.pim].map(v=>`<td class="n">${v}</td>`).join('')}</tr>`).join('');
-  return `<h2>${t().statsTitle}</h2>${empty}${predSection()}${k}
+  return `${predSection()}
   <h2>${t().leaders}</h2><div class="grid2">${tab(t().lGoals,top(r=>r.g),r=>[r.g])}${tab(t().lPoints,top(r=>r.g+r.a),r=>LANG==='fr'?[r.g+' B',r.a+' P',r.g+r.a]:[r.g+' G',r.a+' A',r.g+r.a])}${tab(t().lPim,top(r=>r.pim),r=>[r.pen+' '+t().pen,r.pim+' '+t().min])}</div>
   <h2>${t().playerStats}</h2><div class="filters"><select id="pteam" aria-label="${t().filterTeam}"><option value="">${t().allTeamsP}</option>${Object.entries(T).sort((a,b)=>a[1].localeCompare(b[1])).map(([id,n])=>`<option value="${id}">${esc(n)}</option>`).join('')}</select></div><div id="pst"></div>
   <h2>${t().teamStats}</h2><div class="card scroll"><table><tr><th>${t().team}</th>${t().teamCols.map(h=>`<th class="n">${h}</th>`).join('')}</tr>${tstats}</table></div>`;
