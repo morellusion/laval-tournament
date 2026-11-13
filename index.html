@@ -522,54 +522,8 @@ function stripHTML(){
   return `<div class="stripcap">${t().stripTitle}</div><div class="strip" id="strip">${[...G].sort((a,b)=>a.start.localeCompare(b.start)||a.n-b.n).map(card).join('')}</div>`;
 }
 /* ---------- news feed: results, next games and highlights, worked out from the data only (no player names) ---------- */
-const FOLLOW_KEY='laval-team';
-let FOLLOW='';try{FOLLOW=localStorage.getItem(FOLLOW_KEY)||''}catch(e){}
-if(FOLLOW&&!T[FOLLOW])FOLLOW='';
-if(FOLLOW&&!T[FOLLOW])FOLLOW='';
-let NEWS_MORE=false;
-function newsItems(){
-  const items=[],at=g=>new Date(g.end||g.start).getTime(),teamsOf=g=>[g.home,g.away].filter(Boolean);
-  const when=g=>{const d=dd(g.start);return `${d.dow} ${d.md}, ${tm(g.start)}`};
-  G.filter(g=>g.status==='scheduled'&&new Date(g.start)>=now).sort((a,b)=>a.start.localeCompare(b.start)||a.n-b.n).forEach(g=>{
-    const ar=AR[g.arena],stage=isKO(g)?stageLab(g)+' · ':'';
-    items.push({kind:'next',ts:new Date(g.start).getTime(),teams:teamsOf(g),g,
-      html:`${stage}<b>${esc(slotName(g,'home').name)}</b> ${t().vs} <b>${esc(slotName(g,'away').name)}</b><small>${when(g)}${ar?` · ${esc(ar.name)}${ar.rink?` (${esc(ar.rink)})`:''}`:''}</small>`});
-  });
-  G.filter(played).forEach(g=>{
-    const h=g.score.home,a=g.score.away,hn=tn(g.home),an=tn(g.away),ts=at(g);
-    const ext=g.goals.some(x=>/^SO/i.test(x.p))?t().shootout:g.goals.some(x=>/^OT/i.test(x.p))?t().overtime:'';
-    const bold=(n,v,o)=>v>o?`<b>${esc(n)} ${v}</b>`:`${esc(n)} ${v}`;
-    items.push({kind:'res',ts,teams:teamsOf(g),g,
-      html:`${bold(hn,h,a)}, ${bold(an,a,h)}${ext?` (${ext})`:''}<small>${when(g)}</small>`});
-    const hl=(html)=>items.push({kind:'hl',ts:ts-1,teams:teamsOf(g),g,html});
-    if((h===0)!==(a===0)){const w=h>a?hn:an,l=h>a?an:hn;hl(t().shutout(esc(w),esc(l)))}
-    else if(Math.abs(h-a)>=4)hl(t().big(esc(h>a?hn:an),esc(h>a?an:hn),Math.abs(h-a)));
-    const perScorer={};g.goals.forEach(x=>{if(x.s)(perScorer[x.s]??={t:x.t,n:0}).n++});
-    Object.values(perScorer).filter(x=>x.n>=3).forEach(x=>hl(t().hat(esc(tn(x.t)))));
-    if(h+a>=9)hl(t().many(esc(hn),esc(an),h+a));
-  });
-  const mine=FOLLOW?items.filter(i=>i.teams.includes(FOLLOW)):items;
-  const next=mine.filter(i=>i.kind==='next').sort((a,b)=>a.ts-b.ts).slice(0,FOLLOW?2:3);
-  const rest=mine.filter(i=>i.kind!=='next').sort((a,b)=>b.ts-a.ts);
-  return[...next,...rest];
-}
-function newsHTML(){
-  const opts=Object.entries(T).sort((a,b)=>a[1].localeCompare(b[1])).map(([id,n])=>`<option value="${id}"${id===FOLLOW?' selected':''}>${esc(n)}</option>`).join('');
-  return `<h2>${t().news} <small>${t().newsSub}</small></h2><div class="filters"><select id="nteam" aria-label="${t().followTeam}"><option value="">${t().allTeams}</option>${opts}</select></div><div class="card" id="nl"></div>`;
-}
-function fillNews(){
-  const sel=$('nteam'),box=$('nl');if(!sel||!box)return;
-  const draw=()=>{
-    const all=newsItems(),shown=NEWS_MORE?all.slice(0,30):all.slice(0,6);
-    const pill={next:`<span class="pill nx">${t().nextGame}</span>`,res:`<span class="pill">${t().resLabel}</span>`,hl:`<span class="pill hl">${t().hlLabel}</span>`};
-    box.innerHTML=shown.length?`<ul class="feed">${shown.map(i=>`<li><a class="fi" href="${link(i.g)}">${pill[i.kind]}<div class="tx">${i.html}</div></a></li>`).join('')}</ul>${all.length>6?`<button type="button" class="more" id="nmore">${NEWS_MORE?t().lessNews:t().moreNews}</button>`:''}`:`<div class="empty">${t().noNews}</div>`;
-    const b=$('nmore');if(b)b.onclick=()=>{NEWS_MORE=!NEWS_MORE;draw()};
-  };
-  sel.onchange=()=>{FOLLOW=sel.value;NEWS_MORE=false;try{localStorage.setItem(FOLLOW_KEY,FOLLOW)}catch(e){}draw()};
-  draw();
-}
 function overview(){
-  return stripHTML()+newsHTML()+`<h2>${t().bracket} <small>${t().bracketSub}</small></h2>${bracketHTML()}
+  return stripHTML()+`<h2>${t().bracket} <small>${t().bracketSub}</small></h2>${bracketHTML()}
   <h2>${t().standings} <small>${esc(POOLLAB)}</small></h2>${standAll()}
   <h2>${t().allGames} <small>${t().allGamesSub}</small></h2>${dayBlocks(G)}`;
 }
@@ -811,7 +765,6 @@ function route(keepScroll){
   };
   $('lang').onclick=()=>{LANG=LANG==='fr'?'en':'fr';try{localStorage.setItem('laval-lang',LANG)}catch(e){}route(true)};
   const sp=$('strip');if(sp&&sp.querySelector){const n=sp.querySelector('.next');if(n)sp.scrollLeft=n.offsetLeft-sp.offsetLeft-(sp.clientWidth-n.offsetWidth)/2}
-  if(v==='overview'&&!m)fillNews();
   if(h==='schedule')fillSched();
   if(h==='stats')fillPlayers();
   if(keepScroll!==true)window.scrollTo(0,0);
