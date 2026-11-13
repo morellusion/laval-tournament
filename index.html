@@ -268,8 +268,9 @@ const D=ALL.cats.find(c=>c.key===CATKEY)||ALL.cats[0];
 try{localStorage.setItem('laval-cat',D.key)}catch(e){}
 D.logoImgs=ALL.logoImgs;
 const T=D.teams,P=D.players,AR=D.arenas,G=D.games;
-/* Spordle marks a game 'played' (0-0) as soon as it starts: until its scheduled end, treat it as in progress */
-{const n0=Date.now();G.forEach(g=>{if(g.status==='played'&&n0>=new Date(g.start)&&n0<new Date(g.end))g.status='live'})}
+/* A game is in progress from its scheduled start to its scheduled end, whether Spordle still says 'scheduled' or already
+   'played' (it marks a game 'played' 0-0 as soon as it starts). The export has no 'final' flag to say otherwise. */
+{const n0=Date.now();G.forEach(g=>{if((g.status==='played'||g.status==='scheduled')&&g.home&&g.away&&n0>=new Date(g.start)&&n0<new Date(g.end)){g.status='live';if(!g.score||g.score.home==null)g.score={home:0,away:0}}})}
 const $=i=>document.getElementById(i);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* ---------- language ---------- */
