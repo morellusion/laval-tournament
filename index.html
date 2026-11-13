@@ -171,6 +171,7 @@ select{font:500 15px var(--body);background:var(--surface);color:var(--ink);bord
 .sc-card .ft{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 12px;border-top:1px solid var(--line);background:var(--violet-soft);font:700 11px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .sc-card .ft span:last-child{margin-left:auto}
 .sc-card.done{border-top-color:var(--hero)}
+.sc-card.live .ft span:last-child{color:#d33;font-weight:700}
 .sc-card.done:not(.next){opacity:.5;transition:opacity .15s}
 .sc-card.done:not(.next):hover,.sc-card.done:not(.next):focus-visible{opacity:1}
 .sc-card.ko{border-top-color:var(--red)}
@@ -442,6 +443,10 @@ const inDiv=(id,dv)=>!dv||D.div[id]===dv;
 const divLab=dv=>String(dv||'').replace(/^DIVISION\s+/i,'').replace(/_/g,' ').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
 const POOLLAB=DIVS.length>1?DIVS.map(divLab).join(' · '):D.pool;
 const played=g=>g.status==='played'&&g.score&&g.score.home!=null;
+const isLive=g=>g.status==='live'&&g.score&&g.score.home!=null,shown=g=>played(g)||isLive(g);
+/* the export has no game clock: the period is the latest one seen in the goals and penalties so far */
+const livePer=g=>{const o=['1','2','3','OT','SO'];let m=-1;[...g.goals,...g.pens].forEach(x=>{m=Math.max(m,o.indexOf(String(x.p)))});return m<0?'':o[m]};
+const liveLab=g=>{const p=livePer(g);return t().status.live+(p?' · '+(/^\d$/.test(p)?'P'+p:p):'')};
 const pool=G.filter(g=>!isKO(g)),semis=G.filter(g=>roundOf(g)==='semi'),qfs=G.filter(g=>roundOf(g)==='qf'),fin=G.find(isFinal);
 const byN=Object.fromEntries(G.map(g=>[g.n,g]));
 const lg=(id,s=28)=>{const k=D.logos[id];return k?`<img class="lg" style="--s:${s}px" alt="" src="${D.logoImgs[k]}">`:`<span class="lg empty" style="--s:${s}px"></span>`};
@@ -488,7 +493,7 @@ function slotName(g,side){
   return{name:ph,ph:true};
 }
 function barHTML(g,side){
-  const s=slotName(g,side),v=played(g)?g.score[side]:null,o=played(g)?g.score[side==='home'?'away':'home']:null;
+  const s=slotName(g,side),v=shown(g)?g.score[side]:null,o=shown(g)?g.score[side==='home'?'away':'home']:null;
   const ph=g[side==='home'?'hp':'ap']||'',wm=ph.match(/#(\d+)/),wq=wm&&byN[+wm[1]]?rk(byN[+wm[1]]):{r:'',i:0};
   const badge=s.seed?`<div class="seed">${s.seed}</div>`:(wm&&!g[side]?`<div class="seed w">${wq.i?(wq.r==='qf'?t().qfBadge:t().sfBadge)+wq.i:'W'}</div>`:`<div class="seed">${lg(s.id,28)}</div>`);
   const who=`<div class="who">${s.id?lg(s.id,28)+'<span style="width:8px"></span>':''}<span>${esc(s.name)}${s.hint?`<em>${esc(s.hint)}</em>`:''}</span></div>`;
@@ -511,8 +516,8 @@ function bracketHTML(){
 }
 function rowHTML(g,showDate){
   const d=dd(g.start),h=slotName(g,'home'),a=slotName(g,'away');
-  const sc=played(g),hw=sc&&g.score.home>g.score.away,aw=sc&&g.score.away>g.score.home;
-  return `<li><a class="gr" href="${link(g)}"><div class="t">${tm(g.start)}<small>${showDate?d.dow+' '+d.md:'#'+g.n}</small></div><div class="tm"><div class="${h.ph?'ph':''}"><span class="tl">${lg(h.id,26)}<span>${esc(h.name)}</span></span>${sc?`<span class="sc ${hw?'win':''}">${g.score.home}</span>`:''}</div><div class="${a.ph?'ph':''}"><span class="tl">${lg(a.id,26)}<span>${esc(a.name)}</span></span>${sc?`<span class="sc ${aw?'win':''}">${g.score.away}</span>`:''}</div></div><span class="chip ${isKO(g)?'ko':g.status}">${isKO(g)?stageLab(g):stLab(g.status)}</span></a></li>`;
+  const sc=shown(g),hw=played(g)&&g.score.home>g.score.away,aw=played(g)&&g.score.away>g.score.home;
+  return `<li><a class="gr" href="${link(g)}"><div class="t">${tm(g.start)}<small>${showDate?d.dow+' '+d.md:'#'+g.n}</small></div><div class="tm"><div class="${h.ph?'ph':''}"><span class="tl">${lg(h.id,26)}<span>${esc(h.name)}</span></span>${sc?`<span class="sc ${hw?'win':''}">${g.score.home}</span>`:''}</div><div class="${a.ph?'ph':''}"><span class="tl">${lg(a.id,26)}<span>${esc(a.name)}</span></span>${sc?`<span class="sc ${aw?'win':''}">${g.score.away}</span>`:''}</div></div><span class="chip ${isKO(g)?'ko':g.status}">${isKO(g)?stageLab(g):g.status==='live'?liveLab(g):stLab(g.status)}</span></a></li>`;
 }
 function dayBlocks(list){
   const m={};list.forEach(g=>(m[dkey(g.start)]??=[]).push(g));
@@ -529,11 +534,11 @@ function standHTML(rows,q,legend,di=0){
 function stripHTML(){
   const nx=G.find(g=>g.status==='live')||nextG||[...G].reverse().find(played)||G[0];
   const card=g=>{
-    const d=dd(g.start),h=slotName(g,'home'),a=slotName(g,'away'),sc=played(g),isN=g===nx;
-    const side=(s,v,o)=>`<div class="tt${s.ph?' ph':''}${sc?(v>o?' win':' lose'):''}">${lg(s.id,28)}<span class="nm" title="${esc(s.name)}">${esc(s.name)}</span>${sc?`<span class="sq">${v}</span>`:'<span></span>'}</div>`;
+    const d=dd(g.start),h=slotName(g,'home'),a=slotName(g,'away'),sc=shown(g),pl=played(g),isN=g===nx;
+    const side=(s,v,o)=>`<div class="tt${s.ph?' ph':''}${pl?(v>o?' win':' lose'):''}">${lg(s.id,28)}<span class="nm" title="${esc(s.name)}">${esc(s.name)}</span>${sc?`<span class="sq">${v}</span>`:'<span></span>'}</div>`;
     const stage=isKO(g)?stageLab(g):'';
-    const tag=g.status==='live'?t().status.live:isN&&!sc?t().nextGame:(sc?t().status.played:'');
-    return `<a class="sc-card${isN?' next':''}${sc?' done':''}${isKO(g)?' ko':''}" href="${link(g)}"><div class="hd"><div class="dy">${d.dow}<b>${d.md}</b></div><div class="hr">${tm(g.start)}</div></div>${side(h,sc?g.score.home:0,sc?g.score.away:0)}${side(a,sc?g.score.away:0,sc?g.score.home:0)}${(stage||tag)?`<div class="ft"><span>${stage}</span><span>${tag}</span></div>`:''}</a>`};
+    const tag=g.status==='live'?liveLab(g):isN&&!sc?t().nextGame:(sc?t().status.played:'');
+    return `<a class="sc-card${isN?' next':''}${pl?' done':''}${g.status==='live'?' live':''}${isKO(g)?' ko':''}" href="${link(g)}"><div class="hd"><div class="dy">${d.dow}<b>${d.md}</b></div><div class="hr">${tm(g.start)}</div></div>${side(h,sc?g.score.home:0,sc?g.score.away:0)}${side(a,sc?g.score.away:0,sc?g.score.home:0)}${(stage||tag)?`<div class="ft"><span>${stage}</span><span>${tag}</span></div>`:''}</a>`};
   return `<div class="stripcap">${t().stripTitle}</div><div class="strip" id="strip">${[...G].sort((a,b)=>a.start.localeCompare(b.start)||a.n-b.n).map(card).join('')}</div>`;
 }
 /* ---------- news feed: results, next games and highlights, worked out from the data only (no player names) ---------- */
@@ -709,7 +714,7 @@ function teamView(id){
 }
 function gameView(n){
   const g=byN[n];if(!g)return notFound();
-  const h=slotName(g,'home'),a=slotName(g,'away'),sc=played(g),ko=isKO(g),ar=AR[g.arena];
+  const h=slotName(g,'home'),a=slotName(g,'away'),sc=played(g),lv=isLive(g),ko=isKO(g),ar=AR[g.arena];
   const stage=ko?stageLab(g):t().pool;
   const per=['1','2','3','OT'],pc=(tt,p)=>g.goals.filter(x=>x.t===tt&&x.p===p).length;
   const hasEv=g.goals.length||g.pens.length;
@@ -724,9 +729,9 @@ function gameView(n){
   const homeLab=g.home?t().homeL:'',awayLab=g.away?t().awayL:'';
   return `<a class="back" href="#schedule">${t().backSched}</a>
   <div class="board"><div class="meta"><span>${stage} · ${t().gameWord} ${g.n}</span><span>${dd(g.start).dow} ${dd(g.start).md} · ${tm(g.start)}</span></div>
-  <div class="vs"><div class="tn">${h.id?`<span class="lgw">${lg(h.id,52)}</span>`:''}<div>${esc(h.name)}</div><small>${homeLab||(h.hint?esc(h.hint):'')}</small></div><div class="big ${sc?'':'tbd'}">${sc?`${g.score.home} – ${g.score.away}`:'vs'}</div><div class="tn r">${a.id?`<span class="lgw">${lg(a.id,52)}</span>`:''}<div>${esc(a.name)}</div><small>${awayLab||(a.hint?esc(a.hint):'')}</small></div></div></div>
+  <div class="vs"><div class="tn">${h.id?`<span class="lgw">${lg(h.id,52)}</span>`:''}<div>${esc(h.name)}</div><small>${homeLab||(h.hint?esc(h.hint):'')}</small></div><div class="big ${sc||lv?'':'tbd'}">${sc||lv?`${g.score.home} – ${g.score.away}`:'vs'}</div><div class="tn r">${a.id?`<span class="lgw">${lg(a.id,52)}</span>`:''}<div>${esc(a.name)}</div><small>${awayLab||(a.hint?esc(a.hint):'')}</small></div></div></div>
   <div class="card facts" style="margin-top:16px">
-    <div class="fact"><b>${t().fStatus}</b>${esc(stLab(g.status))}</div>
+    <div class="fact"><b>${t().fStatus}</b>${esc(lv?liveLab(g):stLab(g.status))}</div>
     <div class="fact"><b>${t().fPuck}</b>${tm(g.start)}${t().timeTo}${tm(g.end)}</div>
     <div class="fact"><b>${t().fArena}</b>${ar?`${esc(ar.name)}, ${esc(ar.rink)}<br><a href="${map}" target="_blank" rel="noopener">${esc(ar.address)}, ${esc(ar.city)} ↗</a>`:t().tbd}</div>
     ${g.sheet?`<div class="fact"><b>${t().sheet}</b><a href="${esc(g.sheet)}" target="_blank" rel="noopener">${t().openSheet}</a></div>`:''}
