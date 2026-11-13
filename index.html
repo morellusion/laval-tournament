@@ -168,6 +168,8 @@ select{font:500 15px var(--body);background:var(--surface);color:var(--ink);bord
 .sc-card .ft{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 12px;border-top:1px solid var(--line);background:var(--violet-soft);font:700 11px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .sc-card .ft span:last-child{margin-left:auto}
 .sc-card.done{border-top-color:var(--hero)}
+.sc-card.done:not(.next){opacity:.5;transition:opacity .15s}
+.sc-card.done:not(.next):hover,.sc-card.done:not(.next):focus-visible{opacity:1}
 .sc-card.ko{border-top-color:var(--red)}
 .sc-card.next{border-color:var(--violet);border-top-color:var(--violet);box-shadow:0 8px 20px color-mix(in srgb,var(--violet) 28%,transparent)}
 .sc-card.next .ft{background:var(--violet);color:var(--surface)}
