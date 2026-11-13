@@ -287,7 +287,7 @@ const INF={'Too many players on the ice':'Trop de joueuses sur la glace','Head c
 const S={
 en:{
  eyebrow:'30th edition',
- tabs:{overview:'Overview',schedule:'Schedule',standings:'Standings',stats:'Stats',rules:'Rules'},
+ tabs:{overview:'Overview',schedule:'Schedule',stats:'Stats',rules:'Rules'},
  games:n=>`${n} game${n===1?'':'s'}`,teams:n=>`${n} teams`,
  to:' to ',
  progress:'Progress',complete:'Tournament complete',startsIn:d=>`Starts in ${d} day${d>1?'s':''}`,startingNow:'Starting now',playedOf:(a,b)=>`${a} of ${b} games played`,
@@ -306,7 +306,7 @@ en:{
  statsTitle:'Tournament stats',kGames:'Games played',kGoals:'Goals',kGpg:'Goals per game',kPim:'Penalty minutes',
  noGameYet:(d,t)=>`No game has been played yet. Scoring and penalty leaders appear here once results come in. The first game is ${d} at ${t}.`,
  leaders:'Leaders',lGoals:'Goals',lPoints:'Points (G+A)',lPim:'Penalty minutes',noEntries:'No entries yet.',pen:'pen',min:'min',teamStats:'Team stats',
- back:'← Standings',backSched:'← Schedule',rank:r=>`Pool rank ${r}`,pts:'pts',roster:'Roster',noRoster:'Roster not published',noRosterTip:'Lineups are posted by Spordle after each game is played.',
+ back:'← Overview',backSched:'← Schedule',rank:r=>`Pool rank ${r}`,pts:'pts',roster:'Roster',noRoster:'Roster not published',noRosterTip:'Lineups are posted by Spordle after each game is played.',
  status:{scheduled:'scheduled',live:'in progress',played:'played',postponed:'postponed',cancelled:'cancelled'},
  homeL:'Home · dark jerseys',awayL:'Visitor · light jerseys',
  fStatus:'Status',fPuck:'Puck drop',fArena:'Arena',fTimeline:'Team timeline',tbd:'TBD',timeTo:' to ',
@@ -364,7 +364,7 @@ en:{
 },
 fr:{
  eyebrow:'30e édition',
- tabs:{overview:'Aperçu',schedule:'Horaire',standings:'Classement',stats:'Statistiques',rules:'Règlements'},
+ tabs:{overview:'Aperçu',schedule:'Horaire',stats:'Statistiques',rules:'Règlements'},
  games:n=>`${n} match${n===1?'':'s'}`,teams:n=>`${n} équipes`,
  to:' au ',
  progress:'Progression',complete:'Tournoi terminé',startsIn:d=>`Début dans ${d} jour${d>1?'s':''}`,startingNow:'Début imminent',playedOf:(a,b)=>`${a} match${a===1?'':'s'} joué${a===1?'':'s'} sur ${b}`,
@@ -383,7 +383,7 @@ fr:{
  statsTitle:'Statistiques du tournoi',kGames:'Matchs joués',kGoals:'Buts',kGpg:'Buts par match',kPim:'Minutes de punition',
  noGameYet:(d,t)=>`Aucun match n’a encore été joué. Les meneuses au pointage et aux punitions s’afficheront ici dès les premiers résultats. Le premier match a lieu le ${d} à ${t}.`,
  leaders:'Meneuses',lGoals:'Buts',lPoints:'Points (B+A)',lPim:'Minutes de punition',noEntries:'Aucune donnée pour le moment.',pen:'pun.',min:'min',teamStats:'Statistiques par équipe',
- back:'← Classement',backSched:'← Horaire',rank:r=>`Rang : ${r}`,pts:'pts',roster:'Alignement',noRoster:'Alignement non publié',noRosterTip:'Les alignements sont publiés par Spordle après chaque match.',
+ back:'← Aperçu',backSched:'← Horaire',rank:r=>`Rang : ${r}`,pts:'pts',roster:'Alignement',noRoster:'Alignement non publié',noRosterTip:'Les alignements sont publiés par Spordle après chaque match.',
  status:{scheduled:'prévu',live:'en cours',played:'joué',postponed:'reporté',cancelled:'annulé'},
  homeL:'Domicile · chandails foncés',awayL:'Visiteur · chandails pâles',
  fStatus:'Statut',fPuck:'Mise au jeu',fArena:'Aréna',fTimeline:'Horaire de l’équipe',tbd:'À déterminer',timeTo:' à ',
@@ -573,7 +573,6 @@ function fillSched(){
     $('sl').innerHTML=l.length?dayBlocks(l):`<div class="card empty"><b>${t().noMatch}</b>${t().noMatchTip}</div>`};
   $('fteam').onchange=draw;$('fst').onchange=draw;draw();
 }
-function standingsView(){return `<h2>${t().poolStandings} <small>${esc(POOLLAB)} · ${t().poolPlayedOf(poolPlayed,pool.length)}</small></h2>${standAll()}<h2>${t().bracket}</h2>${bracketHTML()}`}
 const PR=D.prior||{},PBASE=2.87,PK=4;
 const pri=id=>PR[id]||{r:0,sd:1.2,gp:0};
 function predModel(useResults){
@@ -725,7 +724,7 @@ function teamView(id){
   const ro={};G.forEach(g=>g.lineup.filter(l=>l.t===id).forEach(l=>ro[l.pl]=l));
   const rl=Object.values(ro).sort((a,b)=>a.no-b.no);
   const rec=LANG==='fr'?`${r.w} V ${r.l} D ${r.t} N`:`${r.w}W ${r.l}L ${r.t}T`;
-  return `<a class="back" href="#standings">${t().back}</a><h2>${lg(id,56)} ${esc(tn(id))} <small>${t().rank(rank)} · ${rec} · ${r.pts} ${t().pts}</small></h2>
+  return `<a class="back" href="#overview">${t().back}</a><h2>${lg(id,56)} ${esc(tn(id))} <small>${t().rank(rank)} · ${rec} · ${r.pts} ${t().pts}</small></h2>
   <div class="card"><ul class="gl">${list.map(g=>rowHTML(g,true)).join('')}</ul></div>
   <h2>${t().roster}</h2><div class="card">${rl.length?`<ul class="ros">${rl.map(l=>`<li><b>#${l.no}</b>${esc(P[l.pl])}<span>${l.pos}</span></li>`).join('')}</ul>`:`<div class="empty"><b>${t().noRoster}</b>${t().noRosterTip}</div>`}</div>`;
 }
@@ -778,9 +777,8 @@ function route(keepScroll){
   chrome();
   const h=(location.hash||'#overview').slice(1);let v='overview',html;
   const m=h.match(/^(game|team)-([0-9a-z]+)$/);
-  if(m){v=m[1]==='game'?'schedule':'standings';html=m[1]==='game'?gameView(+m[2]):teamView(m[2])}
+  if(m){v=m[1]==='game'?'schedule':'overview';html=m[1]==='game'?gameView(+m[2]):teamView(m[2])}
   else if(h==='schedule'){v=h;html=schedule()}
-  else if(h==='standings'){v=h;html=standingsView()}
   else if(h==='stats'){v=h;html=statsView()}
   else if(h==='rules'){v=h;html=rulesView()}
   else html=overview();
