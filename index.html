@@ -262,7 +262,7 @@ let LANG='en';
 try{const s=localStorage.getItem('laval-lang');LANG=(s==='fr'||s==='en')?s:((navigator.language||'').toLowerCase().startsWith('fr')?'fr':'en')}catch(e){LANG=(navigator.language||'').toLowerCase().startsWith('fr')?'fr':'en'}
 const MONS={en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],fr:['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.']};
 const DOWS={en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],fr:['dim.','lun.','mar.','mer.','jeu.','ven.','sam.']};
-const INF={'Hooking':'Accrochage','Tripping':'Croc-en-jambe','Body checking':'Mise en échec','Slashing':'Coup de bâton','Roughing':'Rudesse','Interference':'Obstruction','Holding':'Retenue','High sticking':'Bâton élevé','Cross checking':'Double échec','Cross-checking':'Double échec','Boarding':'Mise en échec contre la bande','Elbowing':'Coup de coude','Too many players':'Trop de joueuses','Delay of game':'Retard de match','Checking from behind':'Mise en échec par derrière','Unsportsmanlike conduct':'Conduite antisportive','Charging':'Charge','Kneeing':'Coup de genou','Misconduct':'Inconduite','Fighting':'Bagarre'};
+const INF={'Too many players on the ice':'Trop de joueuses sur la glace','Head contact':'Contact à la tête','Verbal abuse of an official, unsportsmanlike conduct, misconduct':'Abus verbal envers un officiel, conduite antisportive, inconduite','Holding the stick':'Retenue du bâton','Clipping':'Mise en échec sous les genoux','Delaying the game':'Retard de match','Spearing':'Harponnage','Game Ejection':'Expulsion du match','Playing with more than one stick, a broken, illegal or illegally obtained stick':'Jeu avec plus d’un bâton, ou avec un bâton brisé, illégal ou obtenu illégalement','Interference with the goaltender':'Obstruction envers la gardienne','Interference from the bench':'Obstruction depuis le banc','Diving and Embellishment':'Simulation','Closing the hand on or freezing the puck':'Main fermée sur la rondelle ou rondelle gelée',"Leaving the player's bench or penalty box":'Sortie du banc des joueuses ou du banc des punitions','Hooking':'Accrochage','Tripping':'Croc-en-jambe','Body checking':'Mise en échec','Slashing':'Coup de bâton','Roughing':'Rudesse','Interference':'Obstruction','Holding':'Retenue','High sticking':'Bâton élevé','Cross checking':'Double échec','Cross-checking':'Double échec','Boarding':'Mise en échec contre la bande','Elbowing':'Coup de coude','Too many players':'Trop de joueuses','Delay of game':'Retard de match','Checking from behind':'Mise en échec par derrière','Unsportsmanlike conduct':'Conduite antisportive','Charging':'Charge','Kneeing':'Coup de genou','Misconduct':'Inconduite','Fighting':'Bagarre'};
 const S={
 en:{
  eyebrow:'30th edition · U15 Girls',
@@ -469,11 +469,11 @@ function slotName(g,side){
   const ph=g[side==='home'?'hp':'ap']||'';
   const sd=ph.match(/(\d)\D*\s+position/i),dv=ph.match(/(\d)\D*?\s+Division\s+(\S+)/i),w=ph.match(/#(\d+)/);
   if(!sd&&dv){const k=+dv[1],di=DIVS.findIndex(x=>x&&x.toUpperCase().endsWith(dv[2].toUpperCase()));
-    if(di>=0){const gs=pool.filter(x=>inDiv(x.home,DIVS[di])),done=gs.every(played),any=gs.some(played),row=STD[di][k-1],ord=t().place[k-1]+' · '+divLab(DIVS[di]);
-      return{id:any?row.id:null,name:any?tn(row.id):ord,ph:!done,hint:(any&&!done)?t().currently(ord):undefined,seed:k}}}
+    if(di>=0){const row=STD[di][k-1],ord=t().place[k-1]+' · '+divLab(DIVS[di]);
+      return{id:poolDone?row.id:null,name:poolDone?tn(row.id):ord,ph:!poolDone,seed:k}}}
   if(sd||dv){
     const k=+(sd||dv)[1],row=ST[k-1],ord=t().place[k-1];
-    return{id:anyPlayed?row.id:null,name:anyPlayed?tn(row.id):ord,ph:!poolDone,hint:(anyPlayed&&!poolDone)?t().currently(ord):undefined,seed:k};
+    return{id:poolDone?row.id:null,name:poolDone?tn(row.id):ord,ph:!poolDone,seed:k};
   }
   if(w){const m=byN[+w[1]],q=m?rk(m):{r:'',i:0};
     if(m&&played(m)){const id=m.score.home>m.score.away?m.home:m.away;return{id,name:tn(id),ph:false,hint:q.i?(q.r==='qf'?t().wonQF(q.i):t().wonSemi(q.i)):t().wonGame(w[1])}}
@@ -751,7 +751,7 @@ function gameView(n){
   const hasEv=g.goals.length||g.pens.length;
   const periods=sc&&hasEv&&g.home&&g.away?`<div class="card scroll"><table><tr><th>${t().team}</th>${per.map(p=>`<th class="n">${p}</th>`).join('')}<th class="n">${t().tot}</th></tr>${[g.home,g.away].map(x=>`<tr><td class="team">${esc(tn(x))}</td>${per.map(p=>`<td class="n">${pc(x,p)}</td>`).join('')}<td class="n"><b>${g.score[x===g.home?'home':'away']}</b></td></tr>`).join('')}</table></div>`:'';
   const goals=g.goals.length?`<div class="card">${g.goals.map(x=>`<div class="ev"><div class="tt">P${esc(x.p)} ${esc(x.time)}</div>${lg(x.t,30)}<div><b>${esc(P[x.s])}</b> · ${esc(tn(x.t))}<small>${x.a.length?t().assists+x.a.map(i=>esc(P[i])).join(', '):t().unassisted}</small></div></div>`).join('')}</div>`:`<div class="card empty"><b>${sc?t().noScoring:t().noGoals}</b>${sc?t().scoreNoDet:t().goalsLater}</div>`;
-  const inf=s=>LANG==='fr'?(INF[s]||s):s;
+  const inf=s=>LANG==='fr'?(INF[s]||INF[String(s).replace(/[’´`�]/g,"'")]||s):s;
   const pens=g.pens.length?`<div class="card">${g.pens.map(x=>`<div class="ev"><div class="tt">P${esc(x.p)} ${esc(x.time)}</div>${lg(x.t,30)}<div><b>${esc(P[x.pl])}</b> · ${esc(tn(x.t))}<small>${esc(inf(x.inf))}, ${x.min} min</small></div></div>`).join('')}</div>`:`<div class="card empty"><b>${sc?t().noPens:t().noPensYet}</b>${t().penTip}</div>`;
   const lineup=tt=>{const l=g.lineup.filter(x=>x.t===tt).sort((a,b)=>a.no-b.no);return `<div class="card"><div style="padding:10px 14px 0"><h3>${esc(tn(tt))}</h3></div>${l.length?`<ul class="ros">${l.map(x=>`<li><b>#${x.no}</b>${esc(P[x.pl])}<span>${x.pos}</span></li>`).join('')}</ul>`:`<div class="empty">${t().lineupNo}</div>`}</div>`};
   const fmt=ko?t().fmtKO:t().fmtPool;
