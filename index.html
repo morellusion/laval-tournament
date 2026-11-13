@@ -176,6 +176,8 @@ select{font:500 15px var(--body);background:var(--surface);color:var(--ink);bord
 .sc-card.ko{border-top-color:var(--red)}
 .sc-card.next{border-color:var(--violet);border-top-color:var(--violet);box-shadow:0 8px 20px color-mix(in srgb,var(--violet) 28%,transparent)}
 .sc-card.next .ft{background:var(--violet);color:var(--surface)}
+.pr.live{box-shadow:inset 4px 0 0 #c62828}
+.pr .lvt{background:#c62828;color:#fff;padding:1px 6px;border-radius:2px;font-weight:700}
 .sc-card.live,.sc-card.live.next{border:2px solid #c62828;border-top:4px solid #c62828;box-shadow:0 8px 20px rgba(198,40,40,.3)}
 .sc-card.live .ft,.sc-card.live.next .ft{background:#c62828;color:#fff}
 .stripcap{font:700 13px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 2px}
@@ -643,9 +645,10 @@ function predSection(){
     <div class="ptour hd"><span></span><span class="n">${L.pSemi}</span><span class="n">${L.pFinal}</span><span class="n">${L.pTitle}</span></div>
     <div class="pnote2" style="border-top:0;padding-top:0">${L.pwTap}</div>${rows}<div class="pnote2">${L.predNote}</div></div>`;
   const up=G.filter(g=>g.status==='scheduled'&&g.home&&g.away&&new Date(g.start)>=now).sort((a,b)=>a.start.localeCompare(b.start)||a.n-b.n).slice(0,3);
+  const lv=G.filter(g=>g.status==='live'&&g.home&&g.away);
   const seg=(c,v)=>`<span class="${c}" style="flex:${Math.max(v,.001)}">${v>=.12?Math.round(v*100)+'%':''}</span>`;
-  const next=up.length?`<div class="card pcard"><div class="pch"><h3>${L.predNext}</h3></div>${up.map(g=>{const o=M.odds(g.home,g.away),d=dd(g.start);
-    return `<a class="pr" href="${link(g)}"><div class="pn"><b>${lg(g.home,20)} ${esc(tn(g.home))}</b><span>${L.vs}</span><b>${esc(tn(g.away))} ${lg(g.away,20)}</b></div><div class="pbar" role="img" aria-label="${esc(tn(g.home))} ${Math.round(o.h*100)}%, ${L.pTie} ${Math.round(o.t*100)}%, ${esc(tn(g.away))} ${Math.round(o.a*100)}%">${seg('ph',o.h)}${seg('pt_',o.t)}${seg('pa',o.a)}</div><small>${d.dow} ${d.md}, ${tm(g.start)} · ${L.pExp} ${Math.round(o.eh)}–${Math.round(o.ea)} · ${L.pTie} ${Math.round(o.t*100)}%</small></a>`}).join('')}</div>`:'';
+  const next=up.length||lv.length?`<div class="card pcard"><div class="pch"><h3>${L.predNext}</h3></div>${[...lv,...up].map(g=>{const o=M.odds(g.home,g.away),d=dd(g.start),on=g.status==='live';
+    return `<a class="pr${on?' live':''}" href="${link(g)}"><div class="pn"><b>${lg(g.home,20)} ${esc(tn(g.home))}</b><span>${L.vs}</span><b>${esc(tn(g.away))} ${lg(g.away,20)}</b></div><div class="pbar" role="img" aria-label="${esc(tn(g.home))} ${Math.round(o.h*100)}%, ${L.pTie} ${Math.round(o.t*100)}%, ${esc(tn(g.away))} ${Math.round(o.a*100)}%">${seg('ph',o.h)}${seg('pt_',o.t)}${seg('pa',o.a)}</div><small>${on?`<b class="lvt">${liveLab(g)}${g.score&&g.score.home!=null?` · ${g.score.home}–${g.score.away}`:''}</b> · `:''}${d.dow} ${d.md}, ${tm(g.start)} · ${L.pExp} ${Math.round(o.eh)}–${Math.round(o.ea)} · ${L.pTie} ${Math.round(o.t*100)}%</small></a>`}).join('')}</div>`:'';
   return `<h2>${L.pred} <small>${L.predSub}</small></h2>${picks}${live}${next}`;
 }
 function statsView(){
