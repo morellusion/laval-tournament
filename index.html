@@ -512,7 +512,7 @@ function slotName(g,side){
 function barHTML(g,side){
   const s=slotName(g,side),v=shown(g)?g.score[side]:null,o=shown(g)?g.score[side==='home'?'away':'home']:null;
   const ph=g[side==='home'?'hp':'ap']||'',wm=ph.match(/#(\d+)/),wq=wm&&byN[+wm[1]]?rk(byN[+wm[1]]):{r:'',i:0};
-  const badge=s.seed?`<div class="seed w">${s.ord}</div>`:(wm&&!g[side]?`<div class="seed w">${wq.i?(wq.r==='qf'?t().qfBadge:t().sfBadge)+wq.i:'W'}</div>`:`<div class="seed">${lg(s.id,28)}</div>`);
+  const badge=s.seed?`<div class="seed w">${s.ord}</div>`:(wm&&!g[side]?`<div class="seed w">${wq.i?(wq.r==='qf'?t().qfBadge:t().sfBadge)+wq.i:'W'}</div>`:`<div class="seed" style="padding:0 1px">${lg(s.id,42)}</div>`);
   const logoBadge=!s.seed&&!(wm&&!g[side]);
   const who=`<div class="who">${s.id&&!logoBadge?lg(s.id,28)+'<span style="width:8px"></span>':''}<span>${esc(s.name)}${s.hint?`<em>${esc(s.hint)}</em>`:s.note?`<em class="rk">${esc(s.note)}</em>`:''}</span></div>`;
   const st=v==null?'':(v>o?' win':' lose');
