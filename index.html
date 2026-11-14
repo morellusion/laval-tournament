@@ -95,6 +95,7 @@ h3{font:700 16px var(--display);text-transform:uppercase;letter-spacing:.1em;col
 .bar.ph .who{color:var(--muted);font-weight:500}
 .bar .who em{display:block;font:600 11px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--warn);font-style:normal}
 .bar .pts{background:var(--hero);color:#b9b0d4;display:flex;align-items:center;justify-content:center;padding-right:12px;font:800 italic 26px var(--display);font-variant-numeric:tabular-nums}
+.bar .who em.rk{color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500;font-size:12px}
 .bar.win .who{color:var(--violet);font-weight:700}
 .bar.win .pts{background:var(--violet);color:var(--surface)}
 .bar.lose .who{color:var(--muted)}
@@ -296,7 +297,7 @@ en:{
  playedN:(a,b)=>`${a}/${b} played`,playoffs:' · playoffs',
  bracket:'Playoff bracket',bracketSub:'Teams fill in as pool play ends',standings:'Standings',allGames:'All games',allGamesSub:'Select a game for its full details',
  winners:'Winners',sfBadge:'SF',qfBadge:'QF',quarter:'Quarterfinal',winnerOfQF:n=>`Winner of quarterfinal ${n}`,wonQF:n=>`Won quarterfinal ${n}`,divWord:'Division',winnerOf:n=>`Winner of semifinal ${n}`,wonSemi:n=>`Won semifinal ${n}`,wonGame:n=>`Won game ${n}`,winnerOfGame:n=>`Winner of game ${n}`,
- place:['1st place','2nd place','3rd place','4th place'],currently:p=>`Currently ${p}`,
+ place:['1st place','2nd place','3rd place','4th place'],ord:['1st','2nd','3rd','4th'],rankNote:(k,d)=>`${['1st','2nd','3rd','4th'][k-1]} ${d?'in division '+d:'in standings'}`,currently:p=>`Currently ${p}`,
  schedule:'Schedule',filterTeam:'Filter by team',allTeams:'All teams',filterStatus:'Filter by status',allStatus:'All games',played:'Played',upcoming:'Upcoming',
  noMatch:'No games match',noMatchTip:'Try another team or clear the status filter.',
  poolStandings:'Pool standings',poolPlayedOf:(a,b)=>`${a} of ${b} games played`,
@@ -373,7 +374,7 @@ fr:{
  playedN:(a,b)=>`${a}/${b} joué${a>1?'s':''}`,playoffs:' · éliminatoires',
  bracket:'Tableau éliminatoire',bracketSub:'Les équipes s’ajoutent à la fin de la ronde préliminaire',standings:'Classement',allGames:'Tous les matchs',allGamesSub:'Sélectionnez un match pour voir les détails',
  winners:'Gagnantes',sfBadge:'DF',qfBadge:'QF',quarter:'Quart de finale',winnerOfQF:n=>`Gagnante du quart de finale ${n}`,wonQF:n=>`A gagné le quart de finale ${n}`,divWord:'Division',winnerOf:n=>`Gagnante de la demi-finale ${n}`,wonSemi:n=>`A gagné la demi-finale ${n}`,wonGame:n=>`A gagné le match ${n}`,winnerOfGame:n=>`Gagnante du match ${n}`,
- place:['1re place','2e place','3e place','4e place'],currently:p=>`Actuellement ${p}`,
+ place:['1re place','2e place','3e place','4e place'],ord:['1re','2e','3e','4e'],rankNote:(k,d)=>`${['1re','2e','3e','4e'][k-1]} ${d?'de la division '+d:'du classement'}`,currently:p=>`Actuellement ${p}`,
  schedule:'Horaire',filterTeam:'Filtrer par équipe',allTeams:'Toutes les équipes',filterStatus:'Filtrer par statut',allStatus:'Tous les matchs',played:'Joués',upcoming:'À venir',
  noMatch:'Aucun match trouvé',noMatchTip:'Essayez une autre équipe ou retirez le filtre de statut.',
  poolStandings:'Classement de la ronde préliminaire',poolPlayedOf:(a,b)=>`${a} match${a===1?'':'s'} joué${a===1?'':'s'} sur ${b}`,
@@ -498,10 +499,10 @@ function slotName(g,side){
   const sd=ph.match(/(\d)\D*\s+position/i),dv=ph.match(/(\d)\D*?\s+Division\s+(\S+)/i),w=ph.match(/#(\d+)/);
   if(!sd&&dv){const k=+dv[1],di=DIVS.findIndex(x=>x&&x.toUpperCase().endsWith(dv[2].toUpperCase()));
     if(di>=0){const row=STD[di][k-1],ord=t().place[k-1]+' · '+divLab(DIVS[di]);
-      return{id:poolDone?row.id:null,name:poolDone?tn(row.id):ord,ph:!poolDone,seed:k}}}
+      return{id:poolDone?row.id:null,name:poolDone?tn(row.id):ord,ph:!poolDone,seed:poolDone?0:k,ord:t().ord[k-1],note:poolDone?t().rankNote(k,divLab(DIVS[di])):''}}}
   if(sd||dv){
     const k=+(sd||dv)[1],row=ST[k-1],ord=t().place[k-1];
-    return{id:poolDone?row.id:null,name:poolDone?tn(row.id):ord,ph:!poolDone,seed:k};
+    return{id:poolDone?row.id:null,name:poolDone?tn(row.id):ord,ph:!poolDone,seed:poolDone?0:k,ord:t().ord[k-1],note:poolDone?t().rankNote(k,''):''};
   }
   if(w){const m=byN[+w[1]],q=m?rk(m):{r:'',i:0};
     if(m&&played(m)){const id=m.score.home>m.score.away?m.home:m.away;return{id,name:tn(id),ph:false,hint:q.i?(q.r==='qf'?t().wonQF(q.i):t().wonSemi(q.i)):t().wonGame(w[1])}}
@@ -511,8 +512,9 @@ function slotName(g,side){
 function barHTML(g,side){
   const s=slotName(g,side),v=shown(g)?g.score[side]:null,o=shown(g)?g.score[side==='home'?'away':'home']:null;
   const ph=g[side==='home'?'hp':'ap']||'',wm=ph.match(/#(\d+)/),wq=wm&&byN[+wm[1]]?rk(byN[+wm[1]]):{r:'',i:0};
-  const badge=s.seed?`<div class="seed">${s.seed}</div>`:(wm&&!g[side]?`<div class="seed w">${wq.i?(wq.r==='qf'?t().qfBadge:t().sfBadge)+wq.i:'W'}</div>`:`<div class="seed">${lg(s.id,28)}</div>`);
-  const who=`<div class="who">${s.id?lg(s.id,28)+'<span style="width:8px"></span>':''}<span>${esc(s.name)}${s.hint?`<em>${esc(s.hint)}</em>`:''}</span></div>`;
+  const badge=s.seed?`<div class="seed w">${s.ord}</div>`:(wm&&!g[side]?`<div class="seed w">${wq.i?(wq.r==='qf'?t().qfBadge:t().sfBadge)+wq.i:'W'}</div>`:`<div class="seed">${lg(s.id,28)}</div>`);
+  const logoBadge=!s.seed&&!(wm&&!g[side]);
+  const who=`<div class="who">${s.id&&!logoBadge?lg(s.id,28)+'<span style="width:8px"></span>':''}<span>${esc(s.name)}${s.hint?`<em>${esc(s.hint)}</em>`:s.note?`<em class="rk">${esc(s.note)}</em>`:''}</span></div>`;
   const st=v==null?'':(v>o?' win':' lose');
   return `<div class="bar${s.ph?' ph':''}${st}">${badge}${who}${v==null?'':`<div class="pts">${v}</div>`}</div>`;
 }
