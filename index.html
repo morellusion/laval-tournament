@@ -448,7 +448,7 @@ const hm=(h,m)=>LANG==='fr'?(m?h+' h '+String(m).padStart(2,'0'):h+' h'):(((h%12
 const tm=s=>hm(+s.slice(11,13),+s.slice(14,16));
 const tmShift=(s,min)=>{let x=+s.slice(11,13)*60+ +s.slice(14,16)+min;x=(x+1440)%1440;return hm(Math.floor(x/60),x%60)};
 /* ---------- data helpers ---------- */
-const isKO=g=>!g.home;
+const isKO=g=>!g.home||!!roundOf(g);
 const isFinal=g=>/^\s*FINALE/i.test(g.hp||'');
 const roundOf=g=>isFinal(g)?'final':/Demi/i.test(g.hp||'')?'semi':/Quart/i.test(g.hp||'')?'qf':'';
 const stageLab=g=>({qf:t().quarter,semi:t().semi,final:t().final})[roundOf(g)]||t().semi;
@@ -470,7 +470,7 @@ const link=g=>'#game-'+g.n;
 const spUrl=g=>{const m=(g.sheet||'').match(/\/game\/(\d+)/);return m?`https://www.lqhf.ca/${LANG==='fr'?'fr':'en'}/schedule/${m[1]}`:''};
 function standings(dv){
   const R={};D.order.filter(id=>inDiv(id,dv)).forEach(id=>R[id]={id,gp:0,w:0,l:0,t:0,gf:0,ga:0,pts:0,pim:0});
-  pool.filter(g=>played(g)&&R[g.home]).forEach(g=>{
+  pool.filter(g=>played(g)&&R[g.home]&&R[g.away]).forEach(g=>{
     const h=g.score.home,a=g.score.away,H=R[g.home],A=R[g.away];
     H.gp++;A.gp++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
     if(h>a){H.w++;A.l++;H.pts+=2}else if(a>h){A.w++;H.l++;A.pts+=2}else{H.t++;A.t++;H.pts++;A.pts++}
