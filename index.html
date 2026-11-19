@@ -223,6 +223,10 @@ th[aria-sort] .sortb{color:var(--violet)}
 .pbar span{display:grid;place-items:center;min-width:0;overflow:hidden;white-space:nowrap}
 .pbar .ph{background:var(--violet);color:#fff}.pbar .pt_{background:var(--silver);color:#fff}.pbar .pa{background:var(--ink);color:var(--bg)}
 .pr small{display:block;color:var(--muted);margin-top:5px}
+.plg{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;font-size:13px;margin-top:6px}
+.plg span{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.pverd{padding:9px 14px;border-top:1px solid var(--line);font-weight:600;color:var(--good)}
+.pverd.up{color:var(--warn)}
 .ptour{display:grid;grid-template-columns:minmax(0,1fr) 60px 60px 66px;gap:6px;align-items:center;padding:7px 14px;border-top:1px solid var(--line);font-size:14px}
 .ptour.hd{border-top:0;font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .ptour .n{text-align:right;font-variant-numeric:tabular-nums;line-height:1.15}.ptour .n b{display:block}.ptour .n i{display:block;font-style:normal;font-size:11px;color:var(--muted)}
@@ -325,6 +329,10 @@ en:{
  pChampPick:'Predicted champion',pSemiPicks:'Predicted semifinalists',pSemiOdds:'chance of semifinal',pTitleOdds:'chance of title',
  predLive:'Live forecast',predLiveSub:(n,tot)=>n?`recalculated with ${n} of ${tot} games played`:'no game played yet, so it equals the initial prediction',
  pSemi:'Semis',pFinal:'Final',pTitle:'Title',pStart:'start',pTie:'Tie',pExp:'Expected score',predNext:'Next games',predNone:'No upcoming game to predict.',
+ gpTitle:'Prediction',gpPre:'Pre-game prediction',gpFav:(tm,p)=>`Favourite: ${tm}, ${p} to win`,gpEven:'Too close to call',gpRating:'Rating:',
+ gpBasis:n=>n?`Based on league results and the ${n} tournament game${n>1?'s':''} played before this one.`:'Based on league results only: no tournament game had been played before this one.',
+ gpOT:p=>`Overtime and shootout included: ${p} chance of a tie after regulation.`,
+ gpRight:'✓ The favourite won',gpUpset:'Upset: the underdog won',gpTie:'The game ended in a tie',gpHow:'How it works →',
  pwTap:'Select a team to see how its numbers were calculated. Small grey numbers are the initial prediction.',
  leagueLine:(r,gf,ga,lab)=>`League ${lab}: ${r.w}-${r.l}-${r.t} in ${r.gp} games, ${gf} goals for and ${ga} against per game, rank ${r.rk} of ${r.n}.`,
  noLeague:'No league games in the data: treated as an average team, with a wide margin of error.',
@@ -402,6 +410,10 @@ fr:{
  pChampPick:'Championne prédite',pSemiPicks:'Demi-finalistes prédites',pSemiOdds:'de chances de demi-finale',pTitleOdds:'de chances de titre',
  predLive:'Prévision en direct',predLiveSub:(n,tot)=>n?`recalculée avec ${n} match${n>1?'s':''} joué${n>1?'s':''} sur ${tot}`:'aucun match joué : identique à la prédiction initiale',
  pSemi:'Demis',pFinal:'Finale',pTitle:'Titre',pStart:'départ',pTie:'Nul',pExp:'Pointage prévu',predNext:'Prochains matchs',predNone:'Aucun match à venir à prédire.',
+ gpTitle:'Prédiction',gpPre:'Prédiction d’avant-match',gpFav:(tm,p)=>`Favorite : ${tm}, ${p} de chances de gagner`,gpEven:'Trop serré pour choisir',gpRating:'Cote :',
+ gpBasis:n=>n?`D’après les résultats de ligue et ${n===1?'le match':`les ${n} matchs`} du tournoi joué${n>1?'s':''} avant celui-ci.`:'D’après les résultats de ligue seulement : aucun match du tournoi n’avait été joué avant celui-ci.',
+ gpOT:p=>`Prolongation et tirs de barrage inclus : ${p} de chances d’une égalité après le temps réglementaire.`,
+ gpRight:'✓ La favorite a gagné',gpUpset:'Surprise : la négligée a gagné',gpTie:'Le match s’est terminé à égalité',gpHow:'Comment c’est calculé →',
  pwTap:'Sélectionnez une équipe pour voir comment ses chiffres ont été calculés. Les petits chiffres gris sont la prédiction initiale.',
  leagueLine:(r,gf,ga,lab)=>`Ligue ${lab} : ${r.w}-${r.l}-${r.t} en ${r.gp} matchs, ${gf} buts pour et ${ga} contre par match, ${r.rk}e sur ${r.n}.`,
  noLeague:'Aucun match de ligue dans les données : traitée comme une équipe moyenne, avec une grande marge d’erreur.',
@@ -578,18 +590,21 @@ function fillSched(){
 }
 const PR=D.prior||{},PBASE=2.87,PK=4;
 const pri=id=>PR[id]||{r:0,sd:1.2,gp:0};
-function predModel(useResults){
-  const ids=D.order,mu={},sd={},adj={},gT={};
+/* before: only use results of games that started before this time (a game page shows the prediction made before it).
+   quick: skip the tournament simulations and return only the ratings and the single-game odds. */
+function predModel(useResults,before,quick){
+  const ids=D.order,mu={},sd={},adj={},gT={};let used=0;
   ids.forEach(id=>{adj[id]=0;gT[id]=0});
-  if(useResults)G.filter(g=>played(g)&&g.home&&g.away).forEach(g=>{
+  if(useResults)G.filter(g=>played(g)&&g.home&&g.away&&(!before||g.start<before)).forEach(g=>{
     const d=Math.max(-6,Math.min(6,g.score.home-g.score.away)),res=d-(pri(g.home).r-pri(g.away).r);
-    adj[g.home]+=res;adj[g.away]-=res;gT[g.home]++;gT[g.away]++});
+    adj[g.home]+=res;adj[g.away]-=res;gT[g.home]++;gT[g.away]++;used++});
   ids.forEach(id=>{const p=pri(id);mu[id]=p.r+adj[id]/(gT[id]+PK);sd[id]=p.sd*Math.sqrt((p.gp+1)/(p.gp+gT[id]+1))});
   const lamOf=(R,h,a)=>{const d=Math.max(-4,Math.min(4,R[h]-R[a]));return[Math.max(.4,PBASE+d/2),Math.max(.4,PBASE-d/2)]};
   const pmf=(l,k)=>{let p=Math.exp(-l);for(let i=1;i<=k;i++)p*=l/i;return p};
   const odds=(h,a)=>{const[lh,la]=lamOf(mu,h,a);let w=0,tt=0,l=0;
     for(let i=0;i<=12;i++)for(let j=0;j<=12;j++){const p=pmf(lh,i)*pmf(la,j);if(i>j)w+=p;else if(i===j)tt+=p;else l+=p}
     const s=w+tt+l;return{h:w/s,t:tt/s,a:l/s,eh:lh,ea:la}};
+  if(quick)return{mu,sd,gT,odds,used};
   let s=12345;const rnd=()=>{s|=0;s=s+0x6D2B79F5|0;let x=Math.imul(s^s>>>15,1|s);x=x+Math.imul(x^x>>>7,61|x)^x;return((x^x>>>14)>>>0)/4294967296};
   const gauss=()=>Math.sqrt(-2*Math.log(1-rnd()))*Math.cos(2*Math.PI*rnd());
   const pois=l=>{const L=Math.exp(-l);let k=0,p=1;do{k++;p*=rnd()}while(p>L);return k-1};
@@ -674,6 +689,30 @@ function predSection(){
   const next=up.length||lv.length?`<div class="card pcard"><div class="pch"><h3>${L.predNext}</h3></div>${[...lv,...up].map(g=>{const o=M.odds(g.home,g.away),d=dd(g.start),on=g.status==='live';
     return `<a class="pr${on?' live':''}" href="${link(g)}"><div class="pn"><b>${lg(g.home,20)} ${esc(tn(g.home))}</b><span>${L.vs}</span><b>${esc(tn(g.away))} ${lg(g.away,20)}</b></div><div class="pbar" role="img" aria-label="${esc(tn(g.home))} ${Math.round(o.h*100)}%, ${L.pTie} ${Math.round(o.t*100)}%, ${esc(tn(g.away))} ${Math.round(o.a*100)}%">${seg('ph',o.h)}${seg('pt_',o.t)}${seg('pa',o.a)}</div><small>${on?`<b class="lvt">${liveLab(g)}${g.score&&g.score.home!=null?` · ${g.score.home}–${g.score.away}`:''}</b> · `:''}${d.dow} ${d.md}, ${tm(g.start)} · ${L.pExp} ${Math.round(o.eh)}–${Math.round(o.ea)} · ${L.pTie} ${Math.round(o.t*100)}%</small></a>`}).join('')}</div>`:'';
   return `<h2>${L.pred} <small>${L.predSub}</small></h2>${picks}${live}${next}`;
+}
+/* Prediction card on a game page: the odds the model gave before puck drop (results of earlier games only).
+   Playoff games cannot end tied: the tie share goes to overtime, split by rating like the simulation does. */
+function gamePredHTML(g){
+  if(!g.home||!g.away)return '';
+  const L=t(),M=predModel(true,g.start,true);
+  if(M.mu[g.home]==null||M.mu[g.away]==null)return '';
+  const o=M.odds(g.home,g.away),ko=isKO(g),done=played(g),before=done||isLive(g);
+  let h=o.h,a=o.a;
+  if(ko){const ph=1/(1+Math.exp(-.9*(M.mu[g.home]-M.mu[g.away])));h+=o.t*ph;a+=o.t*(1-ph)}
+  const seg=(c,v)=>`<span class="${c}" style="flex:${Math.max(v,.001)}">${v>=.12?Math.round(v*100)+'%':''}</span>`;
+  const hn=esc(tn(g.home)),an=esc(tn(g.away));
+  const bar=`<div class="pbar" role="img" aria-label="${hn} ${Math.round(h*100)}%${ko?'':`, ${L.pTie} ${Math.round(o.t*100)}%`}, ${an} ${Math.round(a*100)}%">${seg('ph',h)}${ko?'':seg('pt_',o.t)}${seg('pa',a)}</div>`;
+  const leg=`<div class="plg"><span>${lg(g.home,20)} ${hn} <b>${pct(h)}</b></span>${ko?'':`<span>${L.pTie} <b>${pct(o.t)}</b></span>`}<span><b>${pct(a)}</b> ${an} ${lg(g.away,20)}</span></div>`;
+  const fav=Math.abs(h-a)<.1?null:h>a?g.home:g.away;
+  const favTxt=fav?L.gpFav(esc(tn(fav)),pct(Math.max(h,a))):L.gpEven;
+  let verdict='';
+  if(done){const d=g.score.home-g.score.away,win=d>0?g.home:d<0?g.away:null;
+    verdict=!win?L.gpTie:!fav?'':win===fav?L.gpRight:L.gpUpset;
+    if(verdict)verdict=`<div class="pverd${win&&fav&&win!==fav?' up':''}">${verdict}</div>`}
+  return `<h2>${before?L.gpPre:L.gpTitle}</h2><div class="card pcard"><div class="pr" style="border-top:0">
+    <div class="pn"><b>${favTxt}</b><span>${L.pExp} ${Math.round(o.eh)}–${Math.round(o.ea)}</span></div>${bar}${leg}
+    <small>${L.gpRating} ${hn} ${sg(M.mu[g.home])} · ${an} ${sg(M.mu[g.away])}. ${L.gpBasis(M.used)}${ko?' '+L.gpOT(pct(o.t)):''}</small></div>
+    ${verdict}<div class="pnote2">${L.predNote} <a href="#stats">${L.gpHow}</a></div></div>`;
 }
 function statsView(){
   const sk={};
@@ -765,6 +804,7 @@ function gameView(n){
     ${spUrl(g)||g.sheet?`<div class="fact"><b>Spordle</b>${spUrl(g)?`<a href="${spUrl(g)}" target="_blank" rel="noopener">${t().openSp}</a>`:''}${spUrl(g)&&g.sheet?'<br>':''}${g.sheet?`<a href="${esc(g.sheet)}" target="_blank" rel="noopener">${t().openSheet}</a>`:''}</div>`:''}
     <div class="fact"><b>${t().fTimeline}</b>${t().tl(tmShift(g.start,-30),tmShift(g.start,-45),tmShift(g.start,-15))}</div>
   </div>
+  ${gamePredHTML(g)}
   ${periods?`<h2>${t().byPeriod}</h2>${periods}`:''}
   <h2>${t().scoring}</h2>${goals}<h2>${t().penalties}</h2>${pens}
   ${g.home&&g.away?`<h2>${t().lineups}</h2><div class="grid2">${lineup(g.home)}${lineup(g.away)}</div>`:''}
