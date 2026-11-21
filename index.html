@@ -322,8 +322,8 @@ en:{
  noMatch:'No games match',noMatchTip:'Try another team or clear the status filter.',
  poolStandings:'Pool standings',poolPlayedOf:(a,b)=>`${a} of ${b} games played`,
  cols:['GP','W','L','T','GF','GA','PIM','PTS'],teamCols:['GP','GF','GA','Diff','PIM'],team:'Team',
- legendA:'▸ Round robin in each division, then quarterfinals (2nd of one division vs 3rd of the other), semifinals (division winners vs quarterfinal winners) and the final. Win 2 pts, tie 1. Tiebreakers: points, wins, fewest goals against, most goals for, fair-play points, draw. Fair-play points are not in the data.',
- legend:'▸ Top 4 advance to the semifinals (1st vs 4th, 2nd vs 3rd). Win 2 pts, tie 1. Tiebreakers: points, wins, fewest goals against, most goals for, fair-play points, draw. Fair-play points are not in the data, so a tie that reaches that step is flagged by Spordle only.',
+ legendA:'▸ Round robin in each division, then quarterfinals (2nd of one division vs 3rd of the other), semifinals (division winners vs quarterfinal winners) and the final. Points as Spordle counts them: win 3, tie 2, loss 1 (the fair-play point of each game is assumed earned; the rules do not give the scale). Tiebreakers: points, wins, fewest goals against, most goals for, fair-play points, draw.',
+ legend:'▸ Top 4 advance to the semifinals (1st vs 4th, 2nd vs 3rd). Points as Spordle counts them: win 3, tie 2, loss 1 (the fair-play point of each game is assumed earned; the rules do not give the scale). Tiebreakers: points, wins, fewest goals against, most goals for, fair-play points, draw. Lost fair-play points are not in the data, so a tie that reaches that step is settled by Spordle only.',
  statsTitle:'Tournament stats',kGames:'Games played',kGoals:'Goals',kGpg:'Goals per game',kPim:'Penalty minutes',
  noGameYet:(d,t)=>`No game has been played yet. Scoring and penalty leaders appear here once results come in. The first game is ${d} at ${t}.`,
  leaders:'Leaders',lGoals:'Goals',lPoints:'Points (G+A)',lPim:'Penalty minutes',noEntries:'No entries yet.',pen:'pen',min:'min',teamStats:'Team stats',
@@ -377,9 +377,9 @@ en:{
  koRulesA:['M15A playoffs',['Two divisions of 3 teams: round robin in each division','Quarterfinals: 2nd of one division vs 3rd of the other','Semifinals: each division winner vs a quarterfinal winner','Overtime: 10 min, 3 skaters + goalie, first goal wins, then shootout','Final: home team decided by a draw']],
  rulesTitle:'Tournament rules',rulesSub:'Summary of the official 2026 rules',offDoc:'Official document:',offLink:'Read the full tournament rules (PDF, in French) ↗',offTail:'. The rules held at the registrariat prevail over any other version.',
  rules:[['Game format',['2 periods of 10 min and 1 period of 12 min, stopped time','Warm-up 2 min, ice resurfacing before every game','One 30 s timeout per team','7-goal gap after two periods: running time to the end','Pool games are not played to a finish; ties stand','Home team wears dark jerseys, visitor light']],
-  ['Points and tiebreakers',['Win 2 pts, tie 1, plus a fair-play point','Forfeit: absent team loses; the team present gets 3 pts','Tiebreakers: points, wins, fewest goals against, most goals for, fair-play points, draw of lots','Games against a forfeiting team are ignored for tiebreakers']],
+  ['Points and tiebreakers',['The rules do not give the points for a win, tie or loss; Spordle counts win 3, tie 2, loss 1 (fair-play point included)','Forfeit: absent team loses; the team present gets 3 pts','Tiebreakers: points, wins, fewest goals against, most goals for, fair-play points, draw of lots','Games against a forfeiting team are ignored for tiebreakers']],
   ['M15B playoffs',['Top 4 teams advance','Semifinals: 1st vs 4th, 2nd vs 3rd','Overtime: 10 min, 3 skaters + goalie, first goal wins, then shootout','Extra 30 s timeout in overtime','Final: home team decided by a draw']],
-  ['Teams on game day',['At the arena 45 min before game time','Ready on ice 15 min before','Head coach approves the lineup in Spordle Play 30 min before','Leave the dressing room 15 min after the game','Players 14+ may be asked for photo ID']]],
+  ['Teams on game day',['At the arena 45 min before game time','Ready on ice 15 min before','Head coach approves the lineup in Spordle Play 30 min before','Leave the dressing room 15 min after the game','Players 14+ may be asked for official photo ID (student card, transit card, health card…) when organizers judge it necessary']]],
  notFound:'Page not found',backOv:'Back to the overview',
  foot:(n,g,t)=>`Source: Spordle schedule data for ${n}. ${g} games, ${t} teams. Standings are computed from game results and may differ from official standings.`,
  share:'Share',shareLabel:'Share this page',shareText:'Laval Provincial Women\'s Hockey Tournament – schedule, scores and standings',copied:'Link copied!',
@@ -401,8 +401,8 @@ fr:{
  noMatch:'Aucun match trouvé',noMatchTip:'Essayez une autre équipe ou retirez le filtre de statut.',
  poolStandings:'Classement de la ronde préliminaire',poolPlayedOf:(a,b)=>`${a} match${a===1?'':'s'} joué${a===1?'':'s'} sur ${b}`,
  cols:['PJ','V','D','N','BP','BC','MP','PTS'],teamCols:['PJ','BP','BC','Diff','MP'],team:'Équipe',
- legendA:'▸ Rondes à la ronde dans chaque division, puis quarts de finale (2e d’une division contre 3e de l’autre), demi-finales (premières de division contre gagnantes des quarts) et finale. Victoire 2 pts, nulle 1 pt. Bris d’égalité : points, victoires, moins de buts contre, plus de buts pour, points franc jeu, tirage au sort. Les points franc jeu ne sont pas dans les données.',
- legend:'▸ Les 4 premières équipes passent aux demi-finales (1re contre 4e, 2e contre 3e). Victoire 2 pts, nulle 1 pt. Bris d’égalité : points, victoires, moins de buts contre, plus de buts pour, points franc jeu, tirage au sort. Les points franc jeu ne sont pas dans les données : une égalité qui atteint cette étape n’est tranchée que par Spordle.',
+ legendA:'▸ Rondes à la ronde dans chaque division, puis quarts de finale (2e d’une division contre 3e de l’autre), demi-finales (premières de division contre gagnantes des quarts) et finale. Points comme Spordle les compte : victoire 3, nulle 2, défaite 1 (le point franc jeu de chaque match est présumé obtenu; le règlement ne donne pas le barème). Bris d’égalité : points, victoires, moins de buts contre, plus de buts pour, points franc jeu, tirage au sort.',
+ legend:'▸ Les 4 premières équipes passent aux demi-finales (1re contre 4e, 2e contre 3e). Points comme Spordle les compte : victoire 3, nulle 2, défaite 1 (le point franc jeu de chaque match est présumé obtenu; le règlement ne donne pas le barème). Bris d’égalité : points, victoires, moins de buts contre, plus de buts pour, points franc jeu, tirage au sort. Les points franc jeu perdus ne sont pas dans les données : une égalité qui atteint cette étape n’est tranchée que par Spordle.',
  statsTitle:'Statistiques du tournoi',kGames:'Matchs joués',kGoals:'Buts',kGpg:'Buts par match',kPim:'Minutes de punition',
  noGameYet:(d,t)=>`Aucun match n’a encore été joué. Les meneuses au pointage et aux punitions s’afficheront ici dès les premiers résultats. Le premier match a lieu le ${d} à ${t}.`,
  leaders:'Meneuses',lGoals:'Buts',lPoints:'Points (B+A)',lPim:'Minutes de punition',noEntries:'Aucune donnée pour le moment.',pen:'pun.',min:'min',teamStats:'Statistiques par équipe',
@@ -456,9 +456,9 @@ fr:{
  koRulesA:['Éliminatoires M15A',['Deux divisions de 3 équipes : ronde à la ronde dans chaque division','Quarts de finale : 2e d’une division contre 3e de l’autre','Demi-finales : la première de chaque division contre une gagnante des quarts','Prolongation : 10 min, 3 joueuses + gardienne, le premier but gagne, puis tirs de barrage','Finale : l’équipe receveur est déterminée par tirage au sort']],
  rulesTitle:'Règlements du tournoi',rulesSub:'Résumé des règlements officiels 2026',offDoc:'Document officiel :',offLink:'Lire les règlements complets du tournoi (PDF) ↗',offTail:'. Les règlements détenus au registrariat prévalent sur toute autre version.',
  rules:[['Déroulement des matchs',['2 périodes de 10 min et 1 période de 12 min, à temps arrêté','Échauffement de 2 min, réfection de la glace avant chaque match','Un temps d’arrêt de 30 s par équipe','Écart de 7 buts après deux périodes : temps continu jusqu’à la fin','Ronde préliminaire non à finir : les nulles sont conservées','L’équipe receveur porte le chandail foncé, la visiteur le pâle']],
-  ['Points et bris d’égalité',['Victoire 2 pts, nulle 1 pt, plus un point franc jeu','Défaut : l’équipe absente perd; l’équipe présente reçoit 3 pts','Bris d’égalité : points, victoires, moins de buts contre, plus de buts pour, points franc jeu, tirage au sort','Les matchs contre une équipe qui fait défaut ne comptent pas pour les bris d’égalité']],
+  ['Points et bris d’égalité',['Le règlement ne donne pas les points pour une victoire, une nulle ou une défaite; Spordle compte victoire 3, nulle 2, défaite 1 (point franc jeu inclus)','Défaut : l’équipe absente perd; l’équipe présente reçoit 3 pts','Bris d’égalité : points, victoires, moins de buts contre, plus de buts pour, points franc jeu, tirage au sort','Les matchs contre une équipe qui fait défaut ne comptent pas pour les bris d’égalité']],
   ['Éliminatoires M15B',['Les 4 premières équipes se qualifient','Demi-finales : 1re contre 4e, 2e contre 3e','Prolongation : 10 min, 3 joueuses + gardienne, le premier but gagne, puis tirs de barrage','Temps d’arrêt supplémentaire de 30 s en prolongation','Finale : l’équipe receveur est déterminée par tirage au sort']],
-  ['Équipes le jour du match',['Présentes à l’aréna 45 min avant le match','Prêtes à jouer 15 min avant','L’entraîneur-chef approuve l’alignement dans Spordle Play 30 min avant','Libérer le vestiaire 15 min après le match','Les joueuses de 14 ans et plus peuvent devoir présenter une pièce d’identité avec photo']]],
+  ['Équipes le jour du match',['Présentes à l’aréna 45 min avant le match','Prêtes à jouer 15 min avant','L’entraîneur-chef approuve l’alignement dans Spordle Play 30 min avant','Libérer le vestiaire 15 min après le match','Les joueuses de 14 ans et plus peuvent devoir présenter une pièce d’identité officielle avec photo (carte étudiante, carte de transport, carte d’assurance maladie…) dans les cas jugés particuliers']]],
  notFound:'Page introuvable',backOv:'Retour à l’aperçu',
  foot:(n,g,t)=>`Source : données d’horaire Spordle pour ${n}. ${g} matchs, ${t} équipes. Le classement est calculé à partir des résultats et peut différer du classement officiel.`,
  share:'Partager',shareLabel:'Partager cette page',shareText:'Tournoi provincial de hockey féminin de Laval – horaire, résultats et classement',copied:'Lien copié !',
@@ -497,7 +497,7 @@ function standings(dv){
   pool.filter(g=>played(g)&&R[g.home]&&R[g.away]).forEach(g=>{
     const h=g.score.home,a=g.score.away,H=R[g.home],A=R[g.away];
     H.gp++;A.gp++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
-    if(h>a){H.w++;A.l++;H.pts+=2}else if(a>h){A.w++;H.l++;A.pts+=2}else{H.t++;A.t++;H.pts++;A.pts++}
+    H.pts++;A.pts++;if(h>a){H.w++;A.l++;H.pts+=2}else if(a>h){A.w++;H.l++;A.pts+=2}else{H.t++;A.t++;H.pts++;A.pts++}
   });
   G.forEach(g=>g.pens.forEach(p=>{if(R[p.t])R[p.t].pim+=p.min}));
   return Object.values(R).sort((x,y)=>y.pts-x.pts||y.w-x.w||x.ga-y.ga||y.gf-x.gf||D.order.indexOf(x.id)-D.order.indexOf(y.id));
@@ -631,7 +631,7 @@ function predModel(useResults,before,quick){
     const T={};ids.forEach(id=>T[id]={id,pts:0,w:0,ga:0,gf:0,r:rnd()});
     pool.forEach(g=>{let h,a;if(useResults&&played(g)){h=g.score.home;a=g.score.away}else{const[lh,la]=lamOf(R,g.home,g.away);h=pois(lh);a=pois(la)}
       const H=T[g.home],A=T[g.away];H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
-      if(h>a){H.pts+=2;H.w++}else if(a>h){A.pts+=2;A.w++}else{H.pts++;A.pts++}});
+      H.pts++;A.pts++;if(h>a){H.pts+=2;H.w++}else if(a>h){A.pts+=2;A.w++}else{H.pts++;A.pts++}});
     const ord=Object.values(T).sort((x,y)=>y.pts-x.pts||y.w-x.w||x.ga-y.ga||y.gf-x.gf||x.r-y.r);
     const ordD=DIVS.map(dv=>ord.filter(x=>inDiv(x.id,dv)));
     ord.forEach((x,i)=>{C[x.id].pts+=x.pts;C[x.id].rk+=(DIVS.length>1?ordD[DIVS.indexOf(D.div[x.id])].indexOf(x):i)+1});
